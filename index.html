@@ -204,8 +204,8 @@
           setIsAnalyzing(true);
           setAiFeedback(null);
 
-          // 這裡我們使用較為穩定的 gemini-1.5-flash 模型
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+          // 修正模型名稱：改為使用 gemini-1.5-flash-latest 或 gemini-pro 確保高兼容性
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
           const systemPrompt = `你是一位專業的英文寫作指導教授與權威批改大師。請依據使用者提供的文章題目與文章內容進行專業批改。
 
