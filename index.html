@@ -62,7 +62,8 @@
           'copy': <><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>,
           'refresh-cw': <><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
           'file-text': <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>,
-          'award': <><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></>
+          'award': <><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></>,
+          'key': <><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></>
         };
 
         return (
@@ -172,6 +173,8 @@
         const [userEssay, setUserEssay] = useState('');
         const [selectedPromptId, setSelectedPromptId] = useState(1);
         const [essayPrompt, setEssayPrompt] = useState(PRESET_PROMPTS[0].prompt);
+        // 已經將您提供的代碼預設填入
+        const [apiKey, setApiKey] = useState('AQ.Ab8RN6KeKjRbM0mlUMvxEALMqHyPJQWWxfj_-ScYyaXSFuvqFw'); 
         const [isAnalyzing, setIsAnalyzing] = useState(false);
         const [aiFeedback, setAiFeedback] = useState(null);
 
@@ -188,6 +191,11 @@
 
         // Gemini API Analysis
         const analyzeEssayWithGemini = async () => {
+          if (!apiKey.trim()) {
+            alert('請先輸入您的 Gemini API Key！');
+            return;
+          }
+
           if (!userEssay.trim()) {
             alert('請先輸入或粘貼您的英文文章！');
             return;
@@ -196,13 +204,14 @@
           setIsAnalyzing(true);
           setAiFeedback(null);
 
-          const apiKey = ""; // Canvas runtime provides key
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+          // 這裡我們使用較為穩定的 gemini-1.5-flash 模型
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
           const systemPrompt = `你是一位專業的英文寫作指導教授與權威批改大師。請依據使用者提供的文章題目與文章內容進行專業批改。
-請以 JSON 格式回覆，包含以下欄位：
+
+請以 JSON 格式回覆，務必確保回傳的是合法的 JSON 字串，包含以下欄位：
 {
-  "overallScore": 85, (0-100分的綜合評分)
+  "overallScore": 85,
   "scoreBreakdown": {
     "grammarAndVocab": "文法與詞彙運用評語",
     "structureAndCoherence": "結構與連貫性評語",
@@ -231,17 +240,30 @@
               body: JSON.stringify(payload)
             });
 
+            if (!response.ok) {
+              const errorData = await response.json();
+              console.error('API Error Response:', errorData);
+              alert(`API 呼叫失敗 (${response.status}): ${errorData.error?.message || '請確認您的 API Key 是否正確。'}`);
+              setIsAnalyzing(false);
+              return;
+            }
+
             const result = await response.json();
             const candidate = result.candidates?.[0];
             if (candidate?.content?.parts?.[0]?.text) {
-              const parsed = JSON.parse(candidate.content.parts[0].text);
-              setAiFeedback(parsed);
+              try {
+                const parsed = JSON.parse(candidate.content.parts[0].text);
+                setAiFeedback(parsed);
+              } catch (parseError) {
+                console.error('JSON Parse Error:', parseError);
+                alert('解析 AI 回覆時發生錯誤，請重試。');
+              }
             } else {
-              alert('AI 分析未能順利回傳，請稍後重試。');
+              alert('AI 分析未能順利回傳內容，請稍後重試。');
             }
           } catch (error) {
             console.error('Error analyzing essay:', error);
-            alert('連線失敗，請檢查網路狀況。');
+            alert('網路連線失敗，或您的瀏覽器阻擋了請求。請檢查網路狀況。');
           } finally {
             setIsAnalyzing(false);
           }
@@ -251,7 +273,7 @@
           <div className="flex-1 flex flex-col min-h-screen">
             {/* Header */}
             <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-              <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row justify-between items-center gap-3">
                 <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('editor')}>
                   <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl shadow-md shadow-indigo-200">
                     W
@@ -262,10 +284,10 @@
                   </div>
                 </div>
 
-                <nav className="flex items-center space-x-1 sm:space-x-2 bg-slate-100 p-1.5 rounded-2xl text-xs sm:text-sm font-bold">
+                <nav className="flex items-center space-x-1 sm:space-x-2 bg-slate-100 p-1.5 rounded-2xl text-xs sm:text-sm font-bold overflow-x-auto w-full md:w-auto">
                   <button
                     onClick={() => setActiveTab('editor')}
-                    className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
+                    className={`whitespace-nowrap px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
                       activeTab === 'editor' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -274,7 +296,7 @@
                   </button>
                   <button
                     onClick={() => setActiveTab('templates')}
-                    className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
+                    className={`whitespace-nowrap px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
                       activeTab === 'templates' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -283,7 +305,7 @@
                   </button>
                   <button
                     onClick={() => setActiveTab('transitions')}
-                    className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
+                    className={`whitespace-nowrap px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
                       activeTab === 'transitions' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -298,6 +320,7 @@
             <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10">
               {activeTab === 'editor' && (
                 <div className="space-y-6 animate-fadeIn">
+                  
                   {/* Essay Prompt Section */}
                   <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
@@ -354,10 +377,12 @@
                       <button
                         onClick={analyzeEssayWithGemini}
                         disabled={isAnalyzing}
-                        className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-indigo-700 transition-colors shadow-2xs flex items-center justify-center space-x-2"
+                        className={`w-full py-3 text-white rounded-xl text-xs sm:text-sm font-bold transition-colors shadow-2xs flex items-center justify-center space-x-2 ${
+                          isAnalyzing ? 'bg-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
+                        }`}
                       >
-                        <Icon name="sparkles" className="w-4 h-4" />
-                        <span>{isAnalyzing ? 'Gemini AI 智能批改中...' : '進行 AI 實時精細批改與給分'}</span>
+                        <Icon name="sparkles" className={`w-4 h-4 ${isAnalyzing ? 'animate-pulse' : ''}`} />
+                        <span>{isAnalyzing ? 'Gemini AI 智能分析與批改中，請稍候...' : '進行 AI 實時精細批改與給分'}</span>
                       </button>
                     </div>
 
@@ -376,12 +401,13 @@
                       </div>
 
                       {aiFeedback ? (
-                        <div className="space-y-4 text-xs">
+                        <div className="space-y-4 text-xs h-[450px] overflow-y-auto custom-scrollbar pr-2">
                           {/* Score Breakdown */}
                           <div className="p-4 bg-indigo-50/70 rounded-xl border border-indigo-100 space-y-2">
                             <span className="font-extrabold text-indigo-900 block">各項評分要點：</span>
                             <p className="text-slate-700"><strong>文法與詞彙：</strong>{aiFeedback.scoreBreakdown?.grammarAndVocab}</p>
                             <p className="text-slate-700"><strong>結構連貫性：</strong>{aiFeedback.scoreBreakdown?.structureAndCoherence}</p>
+                            <p className="text-slate-700"><strong>內容切題度：</strong>{aiFeedback.scoreBreakdown?.contentAndTaskAchievement}</p>
                           </div>
 
                           {/* Grammar Corrections */}
@@ -401,7 +427,7 @@
                           {/* Improved Version */}
                           <div className="space-y-2 pt-2 border-t border-slate-100">
                             <span className="font-extrabold text-slate-900 block">高分潤飾範本 (Improved Essay)：</span>
-                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-800 leading-relaxed font-sans">
+                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-800 leading-relaxed font-sans whitespace-pre-wrap">
                               {aiFeedback.improvedVersion}
                             </div>
                           </div>
@@ -409,7 +435,7 @@
                       ) : (
                         <div className="text-center py-12 text-slate-400 space-y-2">
                           <Icon name="pen-tool" className="w-8 h-8 mx-auto text-slate-300" />
-                          <p className="text-xs">撰寫完成後，點擊左側「進行 AI 實時精細批改」獲得完整分析與高分範本。</p>
+                          <p className="text-xs">撰寫完成後，點擊左側按鈕獲得完整分析與高分範本。</p>
                         </div>
                       )}
                     </div>
@@ -445,7 +471,7 @@
                             <div key={idx} className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2 text-xs">
                               <span className="font-extrabold text-indigo-900 block">{item.section}</span>
                               <p className="text-slate-500">💡 {item.tip}</p>
-                              <p className="font-bold text-slate-900 bg-white p-2.5 rounded border border-slate-100">
+                              <p className="font-bold text-slate-900 bg-white p-2.5 rounded border border-slate-100 whitespace-pre-wrap">
                                 "{item.example}"
                               </p>
                             </div>
@@ -493,7 +519,7 @@
             </main>
 
             {/* Footer */}
-            <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+            <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
               <p>WritingMaster 英文寫作大師 • AI 實時作文批改與結構化寫作訓練平台</p>
             </footer>
           </div>
@@ -504,18 +530,3 @@
     </script>
   </body>
 </html>
-```
-
-已為您全新設計並生成 **WritingMaster - 英文寫作大師** 網站！
-
-### 🌟 網站三大核心功能：
-
-1. **AI 實時寫作與精細批改 (AI Essay Review)**
-   * 輸入作文題目與草稿，實時計算字數。
-   * 點擊按鈕調用 Gemini 3 Flash API 自動進行作文評分（0-100 分）、文法與詞彙建議、結構切題度分析，並生成一份**高分潤飾範本 (Improved Essay)**。
-
-2. **高分作文結構模板 (Essay Templates)**
-   * 收錄學術議論文 (Opinion Essay) 與商務 Email (Business Email) 的標準四段式架構與實用句型。
-
-3. **轉折詞與換句話說資料庫 (Transitional Words)**
-   * 整理遞進、轉折、因果等高階邏輯銜接詞，提升寫作銜接與文采。
