@@ -49,10 +49,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useState, useMemo } = React;
-
-      // 自動硬編碼個人專屬金鑰
-      const HARDCODED_API_KEY = "AQ.Ab8RN6JJdp4TCGqu0Lrh5bfC6Qw47e_PAyvUvYRMh_QqctmOxg";
+      const { useState, useMemo, useEffect } = React;
 
       const Icon = ({ name, className = "w-4 h-4" }) => {
         const svgMap = {
@@ -137,6 +134,14 @@
         const [essayPrompt, setEssayPrompt] = useState(PRESET_PROMPTS[0].prompt);
         const [isAnalyzing, setIsAnalyzing] = useState(false);
         const [aiFeedback, setAiFeedback] = useState(null);
+        const [apiKey, setApiKey] = useState('');
+
+        useEffect(() => {
+          const storedKey = localStorage.getItem('wm_gemini_key');
+          if (storedKey) {
+            setApiKey(storedKey);
+          }
+        }, []);
 
         const wordCount = useMemo(() => {
           const trimmed = userEssay.trim();
@@ -148,16 +153,36 @@
           setEssayPrompt(p.prompt);
         };
 
+        const getValidApiKey = () => {
+          let currentKey = apiKey || localStorage.getItem('wm_gemini_key');
+          if (!currentKey) {
+            currentKey = prompt('請輸入您的 Gemini API Key：');
+            if (currentKey && currentKey.trim()) {
+              currentKey = currentKey.trim();
+              localStorage.setItem('wm_gemini_key', currentKey);
+              setApiKey(currentKey);
+            }
+          }
+          return currentKey;
+        };
+
         const analyzeEssayWithGemini = async () => {
           if (!userEssay.trim()) {
             alert('請先輸入或粘貼您的英文文章！');
             return;
           }
 
+          const activeKey = getValidApiKey();
+          if (!activeKey) {
+            alert('需要設定 API Key 才能進行分析！');
+            return;
+          }
+
           setIsAnalyzing(true);
           setAiFeedback(null);
 
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${HARDCODED_API_KEY}`;
+          // 更新 API 端點為最新 gemini-3.8-flash
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${activeKey}`;
 
           const systemPrompt = `你是一位專業的英文寫作指導教授與權威批改大師。請依據使用者提供的文章題目與文章內容進行專業批改。
 請以 JSON 格式回覆，包含以下欄位：
@@ -203,6 +228,10 @@
               }
             } else {
               const errMsg = result.error?.message || '未知錯誤';
+              if (response.status === 400 || response.status === 401 || response.status === 403) {
+                localStorage.removeItem('wm_gemini_key');
+                setApiKey('');
+              }
               alert(`API 呼叫失敗 (${response.status}): ${errMsg}`);
             }
           } catch (error) {
