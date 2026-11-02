@@ -170,7 +170,8 @@
 
       function App() {
         const [activeTab, setActiveTab] = useState('editor'); // 'editor' | 'templates' | 'transitions'
-        const [apiKey, setApiKey] = useState(''); // 新增 API Key 狀態
+        // 自動使用背景金鑰
+        const apiKey = 'AQ.Ab8RN6KV9g2I4hpxr21COEyjonjefzT4lOl91eO45E1gvA9uRQ';
         const [userEssay, setUserEssay] = useState('');
         const [selectedPromptId, setSelectedPromptId] = useState(1);
         const [essayPrompt, setEssayPrompt] = useState(PRESET_PROMPTS[0].prompt);
@@ -190,16 +191,6 @@
 
         // Gemini API Analysis
         const analyzeEssayWithGemini = async () => {
-          if (!apiKey.trim()) {
-            alert('請先在上方輸入您的 Gemini API Key！');
-            return;
-          }
-          
-          if (!apiKey.trim().startsWith('AIza')) {
-            alert('您輸入的似乎不是有效的 API Key。正確的 Gemini API Key 通常以 "AIza" 開頭，請重新確認！');
-            return;
-          }
-
           if (!userEssay.trim()) {
             alert('請先輸入或粘貼您的英文文章！');
             return;
@@ -208,7 +199,7 @@
           setIsAnalyzing(true);
           setAiFeedback(null);
 
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
           const systemPrompt = `你是一位專業的英文寫作指導教授與權威批改大師。請依據使用者提供的文章題目與文章內容進行專業批改。
 
@@ -244,9 +235,8 @@
             });
 
             if (!response.ok) {
-              const errorData = await response.json();
-              console.error('API Error Response:', errorData);
-              alert(`連線發生錯誤，請稍後重試。`);
+              const errorData = me => {};
+              alert(`API 呼叫失敗 (${response.status})，請確認金鑰權限或稍後重試。`);
               setIsAnalyzing(false);
               return;
             }
@@ -266,7 +256,7 @@
             }
           } catch (error) {
             console.error('Error analyzing essay:', error);
-            alert('網路連線失敗，或您的瀏覽器阻擋了請求。請檢查網路狀況。');
+            alert('網路連線失敗，請檢查網路狀況。');
           } finally {
             setIsAnalyzing(false);
           }
@@ -324,25 +314,6 @@
               {activeTab === 'editor' && (
                 <div className="space-y-6 animate-fadeIn">
                   
-                  {/* API Key Input Section */}
-                  <div className="bg-indigo-50 p-5 rounded-2xl border border-indigo-100 shadow-sm space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Icon name="key" className="w-5 h-5 text-indigo-600" />
-                      <span className="font-extrabold text-indigo-900 text-sm">設定 Gemini API Key</span>
-                    </div>
-                    <p className="text-xs text-indigo-700">
-                      請前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="underline font-bold hover:text-indigo-900">Google AI Studio</a> 申請免費金鑰 (需使用個人 Gmail 登入)。<br/>
-                      <span className="text-rose-600 font-bold">＊提醒：正確的金鑰必定是以「AIza」開頭的一串長代碼。</span>
-                    </p>
-                    <input
-                      type="password"
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="貼上以 AIza 開頭的 API Key..."
-                      className="w-full px-3.5 py-2.5 bg-white border border-indigo-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder-slate-400"
-                    />
-                  </div>
-
                   {/* Essay Prompt Section */}
                   <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
@@ -404,7 +375,7 @@
                         }`}
                       >
                         <Icon name="sparkles" className={`w-4 h-4 ${isAnalyzing ? 'animate-pulse' : ''}`} />
-                        <span>{isAnalyzing ? 'Gemini AI 智能分析與批改中，請稍候...' : '進行 AI 實時精細批改與給分'}</span>
+                        <span>{isAnalyzing ? 'Gemini AI 智能批改中...' : '進行 AI 實時精細批改與給分'}</span>
                       </button>
                     </div>
 
@@ -423,13 +394,13 @@
                       </div>
 
                       {aiFeedback ? (
-                        <div className="space-y-4 text-xs h-[450px] overflow-y-auto custom-scrollbar pr-2">
+                        <div className="space-y-4 text-xs max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
                           {/* Score Breakdown */}
                           <div className="p-4 bg-indigo-50/70 rounded-xl border border-indigo-100 space-y-2">
                             <span className="font-extrabold text-indigo-900 block">各項評分要點：</span>
                             <p className="text-slate-700"><strong>文法與詞彙：</strong>{aiFeedback.scoreBreakdown?.grammarAndVocab}</p>
                             <p className="text-slate-700"><strong>結構連貫性：</strong>{aiFeedback.scoreBreakdown?.structureAndCoherence}</p>
-                            <p className="text-slate-700"><strong>內容切題度：</strong>{aiFeedback.scoreBreakdown?.contentAndTaskAchievement}</p>
+                            <p className="text-slate-700"><strong>內容與切題度：</strong>{aiFeedback.scoreBreakdown?.contentAndTaskAchievement}</p>
                           </div>
 
                           {/* Grammar Corrections */}
@@ -457,7 +428,7 @@
                       ) : (
                         <div className="text-center py-12 text-slate-400 space-y-2">
                           <Icon name="pen-tool" className="w-8 h-8 mx-auto text-slate-300" />
-                          <p className="text-xs">撰寫完成後，點擊左側按鈕獲得完整分析與高分範本。</p>
+                          <p className="text-xs">撰寫完成後，點擊左側「進行 AI 實時精細批改」獲得完整分析與高分範本。</p>
                         </div>
                       )}
                     </div>
