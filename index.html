@@ -173,8 +173,6 @@
         const [userEssay, setUserEssay] = useState('');
         const [selectedPromptId, setSelectedPromptId] = useState(1);
         const [essayPrompt, setEssayPrompt] = useState(PRESET_PROMPTS[0].prompt);
-        // 已經將您提供的代碼預設填入
-        const [apiKey, setApiKey] = useState('AQ.Ab8RN6KeKjRbM0mlUMvxEALMqHyPJQWWxfj_-ScYyaXSFuvqFw'); 
         const [isAnalyzing, setIsAnalyzing] = useState(false);
         const [aiFeedback, setAiFeedback] = useState(null);
 
@@ -191,11 +189,6 @@
 
         // Gemini API Analysis
         const analyzeEssayWithGemini = async () => {
-          if (!apiKey.trim()) {
-            alert('請先輸入您的 Gemini API Key！');
-            return;
-          }
-
           if (!userEssay.trim()) {
             alert('請先輸入或粘貼您的英文文章！');
             return;
@@ -204,8 +197,9 @@
           setIsAnalyzing(true);
           setAiFeedback(null);
 
-          // 修正模型名稱：改為使用 gemini-1.5-flash-latest 或 gemini-pro 確保高兼容性
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+          // 恢復使用系統預設的免金鑰支援模型 gemini-3-flash-preview
+          const apiKey = "";
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
           const systemPrompt = `你是一位專業的英文寫作指導教授與權威批改大師。請依據使用者提供的文章題目與文章內容進行專業批改。
 
@@ -243,7 +237,7 @@
             if (!response.ok) {
               const errorData = await response.json();
               console.error('API Error Response:', errorData);
-              alert(`API 呼叫失敗 (${response.status}): ${errorData.error?.message || '請確認您的 API Key 是否正確。'}`);
+              alert(`連線發生錯誤，請稍後重試。`);
               setIsAnalyzing(false);
               return;
             }
