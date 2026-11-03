@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WritingMaster - 英文寫作大師</title>
-
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +21,7 @@
 
     <style>
       body {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
       }
       .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
@@ -36,6 +35,9 @@
         background: #cbd5e1;
         border-radius: 4px;
       }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
       @keyframes fadeIn {
         from { opacity: 0; transform: translateY(6px); }
         to { opacity: 1; transform: translateY(0); }
@@ -45,20 +47,30 @@
       }
     </style>
   </head>
-  <body class="bg-[#F8FAFC] text-slate-800 antialiased selection:bg-indigo-100 selection:text-indigo-900 min-h-screen flex flex-col">
+  <body class="bg-[#F8FAFC] text-slate-800 antialiased selection:bg-indigo-100 selection:text-indigo-900 min-h-screen flex flex-col custom-scrollbar">
     <div id="root"></div>
 
     <script type="text/babel">
       const { useState, useMemo, useEffect } = React;
 
+      // React-safe SVG Icon component
       const Icon = ({ name, className = "w-4 h-4" }) => {
         const svgMap = {
           'pen-tool': <><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/></>,
           'sparkles': <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/>,
           'book-open': <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>,
           'layers': <><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>,
+          'check-circle': <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>,
+          'copy': <><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>,
+          'refresh-cw': <><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
           'file-text': <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>,
-          'award': <><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></>
+          'award': <><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></>,
+          'trash-2': <><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>,
+          'search': <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+          'zap': <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,
+          'arrow-right': <><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>,
+          'thumbs-up': <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>,
+          'alert-triangle': <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>
         };
 
         return (
@@ -77,129 +89,266 @@
         );
       };
 
+      // Notification Toast Helper
+      const Toast = ({ message, onClose }) => {
+        useEffect(() => {
+          const timer = setTimeout(onClose, 3000);
+          return () => clearTimeout(timer);
+        }, [onClose]);
+
+        return (
+          <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl flex items-center space-x-2 text-xs sm:text-sm font-medium animate-fadeIn">
+            <Icon name="check-circle" className="w-4 h-4 text-emerald-400" />
+            <span>{message}</span>
+          </div>
+        );
+      };
+
+      // ESSAY TEMPLATES DATASET
       const ESSAY_TEMPLATES = [
         {
           id: 'opinion',
-          title: '學術議論文 (Opinion / Argumentative Essay)',
+          title: '學術議論文 (Academic Argumentative Essay)',
           category: '學術與考試 (IELTS / TOEFL / 學測)',
-          description: '適用於針對爭議性議題表達贊同或反對立場，並進行邏輯論證。',
+          description: '適用於針對爭議性議題表達明確立場，運用邏輯論證、實證例證與反駁觀點。',
           structure: [
-            { section: '1. 引言段 (Introduction)', tip: 'Hook + 背景說明 + Clear Thesis Statement', example: 'Recently, the issue of AI in education has sparked heated debate. While some argue that AI reduces critical thinking, I firmly believe that it enhances personalized learning.' },
-            { section: '2. 正方論述段 (Body Paragraph 1)', tip: 'Topic Sentence + 理由說明 + 具體舉例', example: 'To begin with, AI tools enable tailored learning experiences. For instance, intelligent tutoring systems can adapt to individual student paces.' },
-            { section: '3. 反方/對立觀點駁斥 (Body Paragraph 2 / Counter-argument)', tip: '承認他人觀點 + 提出反駁邏輯', example: 'Admittedly, over-reliance on AI may cause laziness. However, with proper guidance, teachers can ensure students use AI ethically.' },
-            { section: '4. 結論段 (Conclusion)', tip: '重申立場 + 總結要點 + 前瞻展望', example: 'In conclusion, despite minor drawbacks, the benefits of AI in classrooms far outweigh its risks. It is essential that we integrate technology wisely.' }
+            { section: '1. 引言段 (Introduction)', tip: 'Hook + 背景引述 + Clear Thesis Statement', example: 'Recently, the rapid integration of artificial intelligence in education has sparked heated debates. While critics argue that AI undermines critical thinking, I firmly maintain that it acts as a transformative catalyst for personalized learning.' },
+            { section: '2. 第一支持段 (Body Paragraph 1)', tip: 'Topic Sentence + 核心論據 + 具體舉例', example: 'To begin with, AI-driven platforms empower students to learn at their tailored pace. For instance, intelligent tutoring systems can dynamically adapt difficulty levels based on individual progress, thereby bridging learning gaps.' },
+            { section: '3. 第二支持段 / 對立觀點駁斥 (Counter-Argument & Refutation)', tip: '承認對立觀點 + 展現批判性反駁邏輯', example: 'Admittedly, opponents contend that reliance on AI may induce intellectual laziness. However, this concern overlooks the role of teachers, who can guide students to utilize AI ethically as an auxiliary research tool.' },
+            { section: '4. 結論段 (Conclusion)', tip: '重申立場 + 摘要要點 + 終極前瞻展望', example: 'In conclusion, despite potential drawbacks, the benefits of educational AI far outweigh its risks. To thrive in the digital age, educational institutions should actively foster AI literacy rather than impose outright bans.' }
           ]
         },
         {
           id: 'narrative-life',
-          title: '生活經驗與個人敘事作文 (Personal Life Narrative)',
-          category: '生活故事與日常敘事',
-          description: '適用於描述生活經歷、克服挑戰、旅行回憶或影響深遠的人生轉折事件。',
+          title: '個人故事與生活經驗 (Personal Narrative Essay)',
+          category: '日常寫作與留學自述 (SOP / Essay)',
+          description: '適用於描繪關鍵人生經歷、困境突破、旅行震撼或深遠影響的個人轉折。',
           structure: [
-            { section: '1. 故事背景與起因 (Setting & Hook)', tip: '點出時間、地點、人物與事件開端', example: 'Looking back on my high school years, there was one unexpected trip that completely changed my perspective on life.' },
-            { section: '2. 事情經過與衝突點 (Rising Action & Challenge)', tip: '描繪當時遇到的困難、心理變化與關鍵時刻', example: 'When our car broke down in the middle of nowhere during a storm, panic set in. However, the warmth of a local stranger taught me the true meaning of kindness.' },
-            { section: '3. 問題解決與啟示 (Resolution & Insight)', tip: '說明事件如何落幕與學到的寶貴經驗', example: 'This challenging experience showed me that unexpected obstacles often lead to the most memorable adventures.' },
-            { section: '4. 個人成長與結語 (Reflective Conclusion)', tip: '總結這次經驗對日常生活帶來的正面改變', example: 'Whenever I face new challenges today, I remind myself of that stormy night and approach problems with a positive mindset.' }
+            { section: '1. 故事背景與懸念 (Setting & Hook)', tip: '營造感官細節、交代時間地點與懸念點', example: 'Looking back on my adolescent years, one unexpected cross-country hiking trip completely redefined my perception of resilience.' },
+            { section: '2. 危機與轉折 (Rising Action & Challenge)', tip: '深入刻畫內心衝突、突破瞬間與心理變化', example: 'When our team encountered a sudden mountain storm, fear engulfed us. As twilight faded, keeping morale high became far more challenging than navigating the treacherous path.' },
+            { section: '3. 體悟與問題解決 (Resolution & Insight)', tip: '說明考驗如何結束以及獲得的生命啟示', example: 'Through mutual support and methodical decision-making, we reached safety by midnight. This ordeal illuminated the extraordinary power of collective perseverance.' },
+            { section: '4. 反思結語 (Reflective Conclusion)', tip: '結合當前生活，說明該經歷對未來的深遠意義', example: 'Whenever I confront formidable challenges today, I draw inspiration from that stormy night, remaining calm and steadfast under pressure.' }
+          ]
+        },
+        {
+          id: 'complaint-review',
+          title: '正式投訴與問題反映信 (Formal Complaint & Feedback Letter)',
+          category: '實用書信與生活溝通',
+          description: '適用於針對消費品質瑕疵、服務缺失或合約維修爭議提出客觀且強而有力的訴求。',
+          structure: [
+            { section: '1. 寫信目的與交易背景 (Purpose & Transaction Details)', tip: '明確指出消費日期、訂單編號及開門見山點出主旨', example: 'I am writing to formally register my dissatisfaction regarding the accommodation service provided at your resort from October 12th to 15th (Booking Ref: #8821).' },
+            { section: '2. 客觀事實驗證 (Factual Description of the Problem)', tip: '列舉具體不符合品質標準的點，維持冷靜客觀立場', example: 'Upon arrival, the air conditioning unit in Suite 402 was completely inoperable. Despite reporting this issue twice to the front desk, no technician was dispatched during our stay.' },
+            { section: '3. 補償要求與解決方案 (Proposed Remedy & Call to Action)', tip: '合理提出退款、折換卷或立即更新處理', example: 'Given the significant inconvenience caused during our family vacation, I believe a partial refund of 30% of the booking fee is both fair and reasonable.' },
+            { section: '4. 結尾與明確期限 (Polite Closing with Deadline)', tip: '訂出期待回覆的期限，展現堅定立場', example: 'I trust you will handle this matter with urgency. I look forward to receiving your response and confirmation of refund within five business days.' }
+          ]
+        },
+        {
+          id: 'email-formal',
+          title: '商務商談與合作 Email (Formal Business Proposal Email)',
+          category: '職場與商務應用',
+          description: '適用於洽談跨國合作、產品詢價、提案跟進或商務簡報邀請。',
+          structure: [
+            { section: '1. 專業主旨與稱呼 (Subject & Salutation)', tip: '主旨明確簡潔，使用高階商業稱呼', example: 'Subject: Partnership Proposal: Joint Digital Marketing Campaign Q3\n\nDear Ms. Henderson,' },
+            { section: '2. 合作契機與目的 (Purpose & Context)', tip: '引述前情或直接說明寫信意圖', example: 'I am writing on behalf of Nexa Tech to explore potential synergies between our AI platforms and your distribution network in Southeast Asia.' },
+            { section: '3. 核心價值與下一步行動 (Value Proposition & Call to Action)', tip: '點出雙贏優勢並約定線上會議時間', example: 'Our analytical tools could enhance your user engagement by 25%. Would you be available for a brief 20-minute video conference next Tuesday at 10:00 AM EST?' },
+            { section: '4. 專業簽署 (Professional Sign-off)', tip: '高階禮貌結語與完整簽名檔', example: 'Thank you for your time and consideration. I look forward to your favorable response.\n\nSincerely,\nJohn Doe\nHead of Business Development | Nexa Tech' }
+          ]
+        },
+        {
+          id: 'chart-analysis',
+          title: '圖表分析與數據報告 (Data & Chart Description Essay)',
+          category: '學術與考試 (IELTS Task 1 / 商業報告)',
+          description: '適用於描述折線圖、柱狀圖、圓餅圖趨勢，進行數據對比與客觀總結。',
+          structure: [
+            { section: '1. 圖表轉述 (Overview / Paraphrase)', tip: '改寫題目，說明圖表主題、單位與時間跨度', example: 'The line graph illustrates the fluctuations in renewable energy consumption across five European nations between 2010 and 2023.' },
+            { section: '2. 主要趨勢亮點 (Key Features & Main Trends)', tip: '指出最顯著的上升、下降或交叉點，避免列舉細節', example: 'Overall, solar power experienced the most dramatic growth, whereas reliance on coal witnessed a steady decline over the thirteen-year period.' },
+            { section: '3. 詳細數據與細節對比 (Detailed Data Comparison)', tip: '運用精確數據與轉折比較詞，分組比較數據', example: 'In 2010, solar energy accounted for a modest 5% of total grid output; however, this figure surged dramatically to 35% by the end of 2023.' },
+            { section: '4. 總結觀點 (Concluding Summary)', tip: '對整體趨勢給出簡潔客觀的歸納結論', example: 'In summary, the data clearly reflects a progressive transition toward sustainable energy sources throughout the surveyed timeframe.' }
           ]
         }
       ];
 
+      // TRANSITIONAL WORDS DATASET
       const TRANSITION_WORDS = [
         {
           category: '遞進與補充 (Addition)',
           words: [
-            { word: 'Furthermore / Moreover', usage: '此外、再者', example: 'Furthermore, the new policy will benefit local businesses.' },
-            { word: 'In addition to', usage: '除了...之外', example: 'In addition to saving costs, this method protects the environment.' }
+            { word: 'Furthermore / Moreover', usage: '此外、再者（用於引出更具說服力的論點）', example: 'Furthermore, implementing green technologies will reduce operational costs in the long run.' },
+            { word: 'In addition to', usage: '除了...之外（後接名詞或 V-ing）', example: 'In addition to enhancing memory, quality sleep boosts immune function.' },
+            { word: 'Not only... but also', usage: '不僅...而且...（雙重強調語氣）', example: 'The strategic pivot not only saved the venture but also expanded its market share.' }
           ]
         },
         {
           category: '轉折與對比 (Contrast)',
           words: [
-            { word: 'However / Nevertheless', usage: '然而、儘管如此', example: 'The project was difficult; nevertheless, we finished it on time.' },
-            { word: 'On the contrary', usage: '恰恰相反', example: 'He is not lazy; on the contrary, he works overtime every day.' }
+            { word: 'However / Nevertheless', usage: '然而、儘管如此（高階轉折副詞）', example: 'The initial market trial faced setback; nevertheless, the team refined the prototype.' },
+            { word: 'On the contrary', usage: '恰恰相反（用於否定前言並提出相反事實）', example: 'He is far from inexperienced; on the contrary, he has managed global supply chains for a decade.' },
+            { word: 'While / Whereas', usage: '而...相比之下...（常用於句中對比兩事物）', example: 'Desktop sales stagnated, whereas mobile subscription revenue surged.' }
+          ]
+        },
+        {
+          category: '因果關係 (Cause & Effect)',
+          words: [
+            { word: 'Consequently / As a result', usage: '結果是、因此（引出最終邏輯結果）', example: 'Raw material prices escalated; consequently, the profit margin compressed.' },
+            { word: 'Therefore / Hence', usage: '因此、由是觀之（學術論述常用推論詞）', example: 'The experimental controls were flawed; hence, the data must be re-evaluated.' },
+            { word: 'Due to / Owing to', usage: '由於、因為（後接名詞片語）', example: 'Owing to stringent safety protocols, zero workplace incidents were reported this quarter.' }
+          ]
+        },
+        {
+          category: '舉例與闡釋 (Exemplification)',
+          words: [
+            { word: 'To illustrate / For instance', usage: '舉例來說（較比 For example 更具學術感）', example: 'To illustrate this principle, consider how micro-financing empowered rural entrepreneurs.' },
+            { word: 'Specifically / In particular', usage: '具體而言、特別是（用於限縮範圍精準說明）', example: 'The standard applies to all exports, specifically those bound for the European Union.' }
+          ]
+        },
+        {
+          category: '總結與歸納 (Concluding)',
+          words: [
+            { word: 'In conclusion / To sum up', usage: '總而言之、綜上所述（文章最後一段開頭）', example: 'In conclusion, economic growth must be reconciled with ecological preservation.' },
+            { word: 'All in all / On the whole', usage: '整體而言、總體來看（簡短綜合觀點）', example: 'All in all, the conference provided invaluable insights into emerging AI trends.' }
           ]
         }
       ];
 
+      // PRESET ESSAY PROMPTS
       const PRESET_PROMPTS = [
-        { id: 1, topic: 'AI與就業前景', prompt: 'Do you agree or disagree that artificial intelligence will replace human jobs in the future? Give reasons and examples to support your answer.' },
-        { id: 2, topic: '科技與環境永續', prompt: 'Some people believe that economic development should take priority over environmental protection. To what extent do you agree or disagree?' },
-        { id: 3, topic: '遠距與數位學習', prompt: 'Online learning has become increasingly popular. Do the advantages of online education outweigh its disadvantages?' }
+        {
+          id: 1,
+          topic: 'AI與就業前景',
+          prompt: 'Do you agree or disagree that artificial intelligence will replace human jobs in the future? Give reasons and examples to support your answer.',
+          sampleText: 'In recent years, artificial intelligence has made huge progress. Many people worry that AI will take away millions of human jobs in the near future. I agree with this idea because AI works faster than humans and does not need rest. For example, robots in factories can work 24 hours without making mistakes. Also, AI can write articles and code programs very fast. However, some people think new jobs will be created. But I think many workers will lose their jobs before they can learn new skills. So we must be careful.'
+        },
+        {
+          id: 2,
+          topic: '科技與環境永續',
+          prompt: 'Some people believe that economic development should take priority over environmental protection. To what extent do you agree or disagree?',
+          sampleText: 'Economic development is very important for every country to help people live better lives. However, I strongly disagree that economy should be more important than protecting the environment. If we destroy nature for money, we will face terrible weather and pollution. For example, many factory pollution causes climate change and damages health. Without a clean earth, economic growth is useless. Therefore, protecting environment should always be our first choice.'
+        },
+        {
+          id: 3,
+          topic: '遠距與數位學習',
+          prompt: 'Online learning has become increasingly popular. Do the advantages of online education outweigh its disadvantages?',
+          sampleText: 'With fast internet, online education is getting very popular today. In my opinion, the advantages of online learning are much bigger than its disadvantages. First, students can study anytime and anywhere without travelling. Second, online platforms offer many free courses from top universities. On the other hand, students might lack self-discipline and miss social life. But overall, flexibility makes online learning a great choice.'
+        },
+        {
+          id: 4,
+          topic: '社群媒體與心理健康',
+          prompt: 'Discuss both the positive and negative impacts of social media on young people.',
+          sampleText: 'Social media like Instagram and TikTok are part of daily life for teenagers. On the positive side, social media helps young people stay connected with friends and learn news instantly. However, the negative impact is also serious. Many teenagers spend too much time scrolling and feel anxious when comparing themselves to others online. Cyberbullying is another big problem. In conclusion, social media brings convenience but also mental health pressure.'
+        },
+        {
+          id: 5,
+          topic: '工作與生活平衡',
+          prompt: 'Many employees struggle to achieve a work-life balance in modern society. What are the causes of this problem, and what solutions can be proposed?',
+          sampleText: 'Today, work-life balance has become a big challenge for many workers. The main cause is smart phones, because boss can send messages anytime even after working hours. Another reason is heavy workload in competitive companies. To solve this problem, companies should set rules that ban late night emails. Also, workers need to manage their time better and learn to relax during weekends.'
+        }
+      ];
+
+      // PRESET SENTENCES FOR ENHANCER TOOL
+      const ENHANCER_PRESETS = [
+        "I think this idea is very good and useful.",
+        "This problem is very bad and makes people unhappy.",
+        "Many people believe that money can buy happiness.",
+        "The government should give more money to help poor students."
       ];
 
       function App() {
-        const [activeTab, setActiveTab] = useState('editor');
-        const [userEssay, setUserEssay] = useState('');
+        const [activeTab, setActiveTab] = useState('editor'); // 'editor' | 'templates' | 'transitions'
         const [selectedPromptId, setSelectedPromptId] = useState(1);
         const [essayPrompt, setEssayPrompt] = useState(PRESET_PROMPTS[0].prompt);
+        const [userEssay, setUserEssay] = useState(PRESET_PROMPTS[0].sampleText);
+        
+        // AI Review State
         const [isAnalyzing, setIsAnalyzing] = useState(false);
         const [aiFeedback, setAiFeedback] = useState(null);
-        const [apiKey, setApiKey] = useState('');
+        const [apiError, setApiError] = useState(null);
 
-        useEffect(() => {
-          const storedKey = localStorage.getItem('wm_gemini_key');
-          if (storedKey) {
-            setApiKey(storedKey);
-          }
-        }, []);
+        // Toast State
+        const [toastMsg, setToastMsg] = useState(null);
 
-        const wordCount = useMemo(() => {
+        // Transition tab states
+        const [searchKeyword, setSearchKeyword] = useState('');
+        const [selectedCategory, setSelectedCategory] = useState('All');
+
+        // Sentence Enhancer states
+        const [inputSentence, setInputSentence] = useState(ENHANCER_PRESETS[0]);
+        const [isEnhancing, setIsEnhancing] = useState(false);
+        const [enhancements, setEnhancements] = useState(null);
+
+        // Word Count calculation
+        const wordStats = useMemo(() => {
           const trimmed = userEssay.trim();
-          return trimmed ? trimmed.split(/\s+/).length : 0;
+          if (!trimmed) return { words: 0, chars: 0, readingTime: 0 };
+          const words = trimmed.split(/\s+/).filter(Boolean).length;
+          const chars = userEssay.length;
+          const readingTime = Math.ceil(words / 200); // 200 wpm average
+          return { words, chars, readingTime };
         }, [userEssay]);
+
+        const showToast = (msg) => {
+          setToastMsg(msg);
+        };
 
         const handleSelectPrompt = (p) => {
           setSelectedPromptId(p.id);
           setEssayPrompt(p.prompt);
+          setUserEssay(p.sampleText);
+          setAiFeedback(null);
+          setApiError(null);
         };
 
-        const getValidApiKey = () => {
-          let currentKey = apiKey || localStorage.getItem('wm_gemini_key');
-          if (!currentKey) {
-            currentKey = prompt('請輸入有效的 Google Gemini API Key：');
-            if (currentKey && currentKey.trim()) {
-              currentKey = currentKey.trim();
-              localStorage.setItem('wm_gemini_key', currentKey);
-              setApiKey(currentKey);
-            }
+        const handleCopyText = (text, label = "內容") => {
+          // Standard document.execCommand fallback for iframe safety
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand('copy');
+            showToast(`已複製 ${label} 至剪貼簿！`);
+          } catch (err) {
+            console.error('Copy failed', err);
           }
-          return currentKey;
+          document.body.removeChild(textarea);
         };
 
+        // Gemini API Essay Analysis
         const analyzeEssayWithGemini = async () => {
           if (!userEssay.trim()) {
             alert('請先輸入或粘貼您的英文文章！');
             return;
           }
 
-          const activeKey = getValidApiKey();
-          if (!activeKey) {
-            alert('需要設定 API Key 才能進行分析！');
-            return;
-          }
-
           setIsAnalyzing(true);
           setAiFeedback(null);
+          setApiError(null);
 
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${activeKey}`;
+          const apiKey = ""; // Canvas runtime auto-injects
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
-          const systemPrompt = `你是一位專業的英文寫作指導教授與權威批改大師。請依據使用者提供的文章題目與文章內容進行專業批改。
-請以 JSON 格式回覆，包含以下欄位：
+          const systemPrompt = `你是一位權威的英文寫作指導教授與雅思/托福權威考官。請依據使用者提供的作文題目與草稿內容進行精細的實時批改。請嚴格以繁體中文 (zh-TW) 提供回覆，唯獨英文範例與句子保持英文。
+
+請使用 JSON 格式輸出，必須符合以下 Schema Structure：
 {
-  "overallScore": 85,
+  "overallScore": 82, (0-100分的綜合評分)
   "scoreBreakdown": {
-    "grammarAndVocab": "文法與詞彙運用評語",
-    "structureAndCoherence": "結構與連貫性評語",
-    "contentAndTaskAchievement": "內容與切題度評語"
+    "grammarAndVocab": "文法與詞彙多樣性評語",
+    "structureAndCoherence": "文章結構與句構連貫性評語",
+    "contentAndTaskAchievement": "內容切題度與論證深度評語"
   },
+  "strengths": ["優點點評 1", "優點點評 2"],
+  "weaknesses": ["需改進點 1", "需改進點 2"],
   "grammarCorrections": [
-    { "original": "原本錯誤句子", "corrected": "修正後的句子", "reason": "中文說明錯誤原因" }
+    {
+      "original": "原本有瑕疵或錯誤的句子",
+      "corrected": "修正後高階道地的英文句子",
+      "reason": "詳細中文說明文法錯誤、用語不當或潤飾原因"
+    }
   ],
-  "improvedVersion": "修改潤飾後的高分文章全文範例"
+  "improvedVersion": "完全重寫潤飾後的高分英文範本全文 (劃分為清晰段落)"
 }`;
 
-          const userQuery = `寫作題目：${essayPrompt}\n\n學生文章內容：\n${userEssay}`;
-
+          const userQuery = `【寫作題目】：${essayPrompt}\n\n【學生作文草稿】：\n${userEssay}`;
           const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
             systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -208,58 +357,129 @@
             }
           };
 
+          // Backoff retry logic for fetch
+          let retries = 0;
+          const maxRetries = 3;
+          let success = false;
+
+          while (retries < maxRetries && !success) {
+            try {
+              const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+
+              const result = await response.json();
+              const candidate = result.candidates?.[0];
+              if (candidate?.content?.parts?.[0]?.text) {
+                const parsed = JSON.parse(candidate.content.parts[0].text);
+                setAiFeedback(parsed);
+                showToast("AI 批改完成！");
+                success = true;
+              } else {
+                throw new Error('Invalid response structure from Gemini API');
+              }
+            } catch (error) {
+              console.error(`Attempt ${retries + 1} failed:`, error);
+              retries++;
+              if (retries >= maxRetries) {
+                setApiError("分析失敗，請檢查網路連線或稍後重試。");
+              } else {
+                await new Promise((res) => setTimeout(res, 1000 * Math.pow(2, retries)));
+              }
+            }
+          }
+
+          setIsAnalyzing(false);
+        };
+
+        // Gemini API Sentence Enhancer
+        const enhanceSentenceWithGemini = async () => {
+          if (!inputSentence.trim()) return;
+
+          setIsEnhancing(true);
+          setEnhancements(null);
+
+          const apiKey = "";
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+          const systemPrompt = `你是一位英語寫作大師，請協助將使用者輸入的平淡英文句子，升級改寫為 3 種不同語氣的高階英文表達（學術風格 Academic, 商務正式 Formal Business, 生動修辭 Vivid/Expressive）。
+請嚴格以繁體中文 (zh-TW) 輸出 JSON：
+{
+  "academic": { "sentence": "高階學術改寫句", "explanation": "使用的高階詞彙與句型解析" },
+  "business": { "sentence": "商務正式改寫句", "explanation": "使用的高階詞彙與句型解析" },
+  "vivid": { "sentence": "生動修辭改寫句", "explanation": "使用的高階詞彙與句型解析" }
+}`;
+
+          const payload = {
+            contents: [{ parts: [{ text: `請改寫並提升此句子："${inputSentence}"` }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: { responseMimeType: "application/json" }
+          };
+
           try {
             const response = await fetch(apiUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload)
             });
-
             const result = await response.json();
-            
-            if (response.ok) {
-              const candidate = result.candidates?.[0];
-              if (candidate?.content?.parts?.[0]?.text) {
-                const parsed = JSON.parse(candidate.content.parts[0].text);
-                setAiFeedback(parsed);
-              } else {
-                alert('AI 分析未能順利回傳，請稍後重試。');
-              }
-            } else {
-              const errMsg = result.error?.message || '未知錯誤';
-              if (response.status === 400 || response.status === 401 || response.status === 403) {
-                localStorage.removeItem('wm_gemini_key');
-                setApiKey('');
-              }
-              alert(`API 呼叫失敗 (${response.status}): ${errMsg}`);
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              setEnhancements(JSON.parse(text));
+              showToast("句子升級成功！");
             }
-          } catch (error) {
-            console.error('Error analyzing essay:', error);
-            alert('連線失敗，請檢查網路狀況。');
+          } catch (err) {
+            console.error(err);
+            alert("換句話說分析失敗，請稍後重試。");
           } finally {
-            setIsAnalyzing(false);
+            setIsEnhancing(false);
           }
         };
 
+        // Filtered transition words
+        const filteredTransitions = useMemo(() => {
+          return TRANSITION_WORDS.map((cat) => {
+            if (selectedCategory !== 'All' && !cat.category.includes(selectedCategory)) {
+              return null;
+            }
+            const filteredWords = cat.words.filter((w) =>
+              w.word.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+              w.usage.includes(searchKeyword) ||
+              w.example.toLowerCase().includes(searchKeyword.toLowerCase())
+            );
+            return filteredWords.length > 0 ? { ...cat, words: filteredWords } : null;
+          }).filter(Boolean);
+        }, [searchKeyword, selectedCategory]);
+
         return (
           <div className="flex-1 flex flex-col min-h-screen">
-            <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-              <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3">
+            {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg(null)} />}
+
+            {/* Header */}
+            <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('editor')}>
                   <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl shadow-md shadow-indigo-200">
                     W
                   </div>
                   <div>
-                    <h1 className="font-extrabold text-slate-900 text-lg sm:text-xl leading-none">WritingMaster</h1>
+                    <h1 className="font-extrabold text-slate-900 text-lg sm:text-xl leading-none tracking-tight">WritingMaster</h1>
                     <span className="text-[10px] font-extrabold text-indigo-600 tracking-wider uppercase mt-1 block">英文寫作大師</span>
                   </div>
                 </div>
 
-                <nav className="flex items-center space-x-1 sm:space-x-2 bg-slate-100 p-1.5 rounded-2xl text-xs sm:text-sm font-bold">
+                {/* Navigation Tabs */}
+                <nav className="flex items-center space-x-1 sm:space-x-2 bg-slate-100 p-1.5 rounded-2xl text-xs sm:text-sm font-bold w-full sm:w-auto justify-center">
                   <button
                     onClick={() => setActiveTab('editor')}
-                    className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
-                      activeTab === 'editor' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-2 ${
+                      activeTab === 'editor' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     <Icon name="pen-tool" className="w-4 h-4" />
@@ -267,8 +487,8 @@
                   </button>
                   <button
                     onClick={() => setActiveTab('templates')}
-                    className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
-                      activeTab === 'templates' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-2 ${
+                      activeTab === 'templates' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     <Icon name="file-text" className="w-4 h-4" />
@@ -276,8 +496,8 @@
                   </button>
                   <button
                     onClick={() => setActiveTab('transitions')}
-                    className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
-                      activeTab === 'transitions' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-2 ${
+                      activeTab === 'transitions' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     <Icon name="sparkles" className="w-4 h-4" />
@@ -287,118 +507,249 @@
               </div>
             </header>
 
-            <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10">
+            {/* Main Workspace Area */}
+            <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+              {/* TAB 1: AI WRITING & REAL-TIME REVIEW */}
               {activeTab === 'editor' && (
                 <div className="space-y-6 animate-fadeIn">
-                  {/* Essay Prompt Section */}
-                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                  {/* Prompt Selector Bar */}
+                  <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
-                      <span className="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider block">選擇熱門題目或自訂 Prompt：</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {PRESET_PROMPTS.map((p) => (
-                          <button
-                            key={p.id}
-                            onClick={() => handleSelectPrompt(p)}
-                            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all border ${
-                              selectedPromptId === p.id
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
-                                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                            }`}
-                          >
-                            {p.topic}
-                          </button>
-                        ))}
-                      </div>
+                      <span className="text-xs font-extrabold text-indigo-600 uppercase tracking-wider flex items-center space-x-1.5">
+                        <Icon name="zap" className="w-4 h-4" />
+                        <span>熱門精選寫作題目 (Presets)</span>
+                      </span>
+                      <span className="text-xs text-slate-400 font-medium">點擊套用題目與範例草稿</span>
                     </div>
 
-                    <input
-                      type="text"
-                      value={essayPrompt}
-                      onChange={(e) => {
-                        setEssayPrompt(e.target.value);
-                        setSelectedPromptId(null);
-                      }}
-                      placeholder="自訂寫作題目..."
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:border-indigo-500"
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      {PRESET_PROMPTS.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => handleSelectPrompt(p)}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                            selectedPromptId === p.id
+                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                              : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
+                          }`}
+                        >
+                          {p.topic}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="pt-1">
+                      <input
+                        type="text"
+                        value={essayPrompt}
+                        onChange={(e) => {
+                          setEssayPrompt(e.target.value);
+                          setSelectedPromptId(null);
+                        }}
+                        placeholder="或在此自行輸入您的英文寫作題目..."
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-indigo-500 transition-colors"
+                      />
+                    </div>
                   </div>
 
-                  {/* Main Writing Workspace */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Text Area Input */}
-                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 flex flex-col">
+                  {/* Main Dual-Column Editor Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    {/* Left Panel: User Writing Workspace */}
+                    <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 flex flex-col">
                       <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                        <span className="text-xs font-extrabold text-slate-700">草稿編輯區</span>
-                        <span className="text-xs font-mono font-bold text-slate-400">
-                          字數統計: <strong className="text-indigo-600">{wordCount}</strong> words
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <Icon name="pen-tool" className="w-4 h-4 text-indigo-600" />
+                          <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">英文草稿編輯區</span>
+                        </div>
+                        <div className="flex items-center space-x-3 text-xs text-slate-500 font-medium">
+                          <button
+                            onClick={() => setUserEssay('')}
+                            className="hover:text-rose-600 transition-colors flex items-center space-x-1"
+                            title="清空內容"
+                          >
+                            <Icon name="trash-2" className="w-3.5 h-3.5" />
+                            <span>清空</span>
+                          </button>
+                          <span>|</span>
+                          <button
+                            onClick={() => handleCopyText(userEssay, "草稿內容")}
+                            className="hover:text-indigo-600 transition-colors flex items-center space-x-1"
+                            title="複製全文"
+                          >
+                            <Icon name="copy" className="w-3.5 h-3.5" />
+                            <span>複製</span>
+                          </button>
+                        </div>
                       </div>
 
+                      {/* Textarea */}
                       <textarea
-                        rows={14}
-                        placeholder="請在此處撰寫或貼上您的英文文章..."
+                        rows={16}
+                        placeholder="請在此處開始撰寫或貼上您的英文文章..."
                         value={userEssay}
                         onChange={(e) => setUserEssay(e.target.value)}
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm leading-relaxed text-slate-800 focus:outline-none focus:border-indigo-500 resize-none font-sans"
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm leading-relaxed text-slate-800 focus:outline-none focus:border-indigo-500 resize-none font-sans custom-scrollbar transition-colors"
                       />
 
+                      {/* Word Count & Stats Bar */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-slate-100/70 rounded-xl text-xs text-slate-600 font-medium">
+                        <div className="flex space-x-4">
+                          <span>字數: <strong className="text-indigo-600 font-bold">{wordStats.words}</strong> words</span>
+                          <span>字元: <strong className="text-slate-800 font-bold">{wordStats.chars}</strong></span>
+                        </div>
+                        <div>
+                          <span>預估閱讀時間: <strong className="text-slate-800 font-bold">~{wordStats.readingTime}</strong> 分鐘</span>
+                        </div>
+                      </div>
+
+                      {/* Submit Action Button */}
                       <button
                         onClick={analyzeEssayWithGemini}
                         disabled={isAnalyzing}
-                        className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-indigo-700 transition-colors shadow-2xs flex items-center justify-center space-x-2"
+                        className={`w-full py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-white transition-all shadow-md flex items-center justify-center space-x-2 ${
+                          isAnalyzing
+                            ? 'bg-indigo-400 cursor-not-allowed'
+                            : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] shadow-indigo-200'
+                        }`}
                       >
-                        <Icon name="sparkles" className="w-4 h-4" />
-                        <span>{isAnalyzing ? 'Gemini AI 智能批改中...' : '進行 AI 實時精細批改與給分'}</span>
+                        <Icon name="sparkles" className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
+                        <span>{isAnalyzing ? 'Gemini AI 智能導師深度分析中...' : '進行 AI 實時精細批改與給分'}</span>
                       </button>
                     </div>
 
-                    {/* AI Feedback Panel */}
-                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+                    {/* Right Panel: AI Feedback Output */}
+                    <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5 min-h-[500px]">
                       <div className="border-b border-slate-100 pb-3 flex justify-between items-center">
-                        <h3 className="font-extrabold text-slate-900 text-sm flex items-center space-x-1.5">
+                        <h3 className="font-extrabold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center space-x-2">
                           <Icon name="award" className="w-4 h-4 text-indigo-600" />
                           <span>AI 批改報告與優化建議</span>
                         </h3>
                         {aiFeedback && (
-                          <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-black rounded-full">
-                            總分：{aiFeedback.overallScore} / 100
-                          </span>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs font-bold text-slate-500">綜合分數:</span>
+                            <span className={`px-3 py-1 rounded-full text-xs font-black ${
+                              aiFeedback.overallScore >= 80 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                              aiFeedback.overallScore >= 60 ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                              'bg-rose-100 text-rose-800 border border-rose-200'
+                            }`}>
+                              {aiFeedback.overallScore} / 100
+                            </span>
+                          </div>
                         )}
                       </div>
 
-                      {aiFeedback ? (
-                        <div className="space-y-4 text-xs max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
-                          <div className="p-4 bg-indigo-50/70 rounded-xl border border-indigo-100 space-y-2">
-                            <span className="font-extrabold text-indigo-900 block">各項評分要點：</span>
-                            <p className="text-slate-700"><strong>文法與詞彙：</strong>{aiFeedback.scoreBreakdown?.grammarAndVocab}</p>
-                            <p className="text-slate-700"><strong>結構連貫性：</strong>{aiFeedback.scoreBreakdown?.structureAndCoherence}</p>
-                            <p className="text-slate-700"><strong>內容與切題度：</strong>{aiFeedback.scoreBreakdown?.contentAndTaskAchievement}</p>
+                      {/* Error Alert */}
+                      {apiError && (
+                        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-center space-x-2">
+                          <Icon name="alert-triangle" className="w-4 h-4 shrink-0" />
+                          <span>{apiError}</span>
+                        </div>
+                      )}
+
+                      {/* Loading Placeholder */}
+                      {isAnalyzing && (
+                        <div className="py-20 flex flex-col items-center justify-center space-y-3 text-slate-400">
+                          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                          <p className="text-xs font-semibold text-slate-600">Gemini AI 正在剖析您的句構、文法與詞彙層次...</p>
+                        </div>
+                      )}
+
+                      {/* AI Result Content */}
+                      {!isAnalyzing && aiFeedback && (
+                        <div className="space-y-5 text-xs sm:text-sm animate-fadeIn">
+                          {/* Score Breakdown Cards */}
+                          <div className="grid grid-cols-1 gap-2.5">
+                            <div className="p-3.5 bg-indigo-50/70 rounded-xl border border-indigo-100 space-y-1">
+                              <span className="font-extrabold text-indigo-900 block text-xs">文法與高階詞彙 (Grammar & Vocab)</span>
+                              <p className="text-slate-700 text-xs leading-relaxed">{aiFeedback.scoreBreakdown?.grammarAndVocab}</p>
+                            </div>
+                            <div className="p-3.5 bg-indigo-50/70 rounded-xl border border-indigo-100 space-y-1">
+                              <span className="font-extrabold text-indigo-900 block text-xs">文章結構與連貫性 (Structure & Coherence)</span>
+                              <p className="text-slate-700 text-xs leading-relaxed">{aiFeedback.scoreBreakdown?.structureAndCoherence}</p>
+                            </div>
+                            <div className="p-3.5 bg-indigo-50/70 rounded-xl border border-indigo-100 space-y-1">
+                              <span className="font-extrabold text-indigo-900 block text-xs">內容切題度與論證 (Task Achievement)</span>
+                              <p className="text-slate-700 text-xs leading-relaxed">{aiFeedback.scoreBreakdown?.contentAndTaskAchievement}</p>
+                            </div>
                           </div>
 
+                          {/* Strengths & Weaknesses */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="p-3.5 bg-emerald-50/80 border border-emerald-100 rounded-xl space-y-1.5">
+                              <span className="font-extrabold text-emerald-900 text-xs flex items-center space-x-1">
+                                <Icon name="thumbs-up" className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>文章優點亮點</span>
+                              </span>
+                              <ul className="list-disc list-inside text-xs text-emerald-800 space-y-1">
+                                {aiFeedback.strengths?.map((s, idx) => <li key={idx}>{s}</li>)}
+                              </ul>
+                            </div>
+                            <div className="p-3.5 bg-amber-50/80 border border-amber-100 rounded-xl space-y-1.5">
+                              <span className="font-extrabold text-amber-900 text-xs flex items-center space-x-1">
+                                <Icon name="alert-triangle" className="w-3.5 h-3.5 text-amber-600" />
+                                <span>優化改進重點</span>
+                              </span>
+                              <ul className="list-disc list-inside text-xs text-amber-800 space-y-1">
+                                {aiFeedback.weaknesses?.map((w, idx) => <li key={idx}>{w}</li>)}
+                              </ul>
+                            </div>
+                          </div>
+
+                          {/* Detailed Sentence Corrections */}
                           {aiFeedback.grammarCorrections?.length > 0 && (
-                            <div className="space-y-2">
-                              <span className="font-extrabold text-slate-900 block">文法修正與優化建議：</span>
-                              {aiFeedback.grammarCorrections.map((item, idx) => (
-                                <div key={idx} className="p-3 bg-rose-50 rounded-xl border border-rose-200 space-y-1">
-                                  <p className="text-rose-900 line-through">"{item.original}"</p>
-                                  <p className="text-emerald-800 font-bold">➔ "{item.corrected}"</p>
-                                  <p className="text-slate-500 text-[11px]">{item.reason}</p>
-                                </div>
-                              ))}
+                            <div className="space-y-3 pt-2">
+                              <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
+                                逐句文法修正與措辭優化 ({aiFeedback.grammarCorrections.length})
+                              </h4>
+                              <div className="space-y-2.5">
+                                {aiFeedback.grammarCorrections.map((item, idx) => (
+                                  <div key={idx} className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-xs">
+                                    <div className="text-rose-600 line-through font-medium">
+                                      ❌ {item.original}
+                                    </div>
+                                    <div className="text-emerald-700 font-bold">
+                                      ✔️ {item.corrected}
+                                    </div>
+                                    <p className="text-slate-500 text-[11px] pt-1 border-t border-slate-200/60 mt-1">
+                                      💡 <strong>解析：</strong>{item.reason}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           )}
 
-                          <div className="space-y-2 pt-2 border-t border-slate-100">
-                            <span className="font-extrabold text-slate-900 block">高分潤飾範本 (Improved Essay)：</span>
-                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-800 leading-relaxed font-sans whitespace-pre-wrap">
+                          {/* Full Polished Improved Essay */}
+                          <div className="space-y-3 pt-3 border-t border-slate-100">
+                            <div className="flex justify-between items-center">
+                              <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
+                                高分潤飾範本 (Improved Full Essay)
+                              </h4>
+                              <button
+                                onClick={() => handleCopyText(aiFeedback.improvedVersion, "高分範本")}
+                                className="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1"
+                              >
+                                <Icon name="copy" className="w-3.5 h-3.5" />
+                                <span>複製範本</span>
+                              </button>
+                            </div>
+                            <div className="p-4 bg-slate-900 text-slate-100 rounded-xl text-xs sm:text-sm leading-relaxed font-sans whitespace-pre-line shadow-inner">
                               {aiFeedback.improvedVersion}
                             </div>
                           </div>
                         </div>
-                      ) : (
-                        <div className="text-center py-12 text-slate-400 space-y-2">
-                          <Icon name="pen-tool" className="w-8 h-8 mx-auto text-slate-300" />
-                          <p className="text-xs">撰寫完成後，點擊左側「進行 AI 實時精細批改」獲得完整分析與高分範本。</p>
+                      )}
+
+                      {/* Empty Initial State */}
+                      {!isAnalyzing && !aiFeedback && !apiError && (
+                        <div className="text-center py-24 text-slate-400 space-y-3">
+                          <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+                            <Icon name="sparkles" className="w-6 h-6" />
+                          </div>
+                          <div className="space-y-1 max-w-xs mx-auto">
+                            <p className="text-xs font-bold text-slate-600">尚未進行 AI 批改分析</p>
+                            <p className="text-[11px] text-slate-400">請在左側輸入英文草稿或選擇預設題目，點擊「進行 AI 實時精細批改」獲得完整建議。</p>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -406,34 +757,54 @@
                 </div>
               )}
 
+              {/* TAB 2: HIGH-SCORE ESSAY TEMPLATES */}
               {activeTab === 'templates' && (
                 <div className="space-y-8 animate-fadeIn">
                   <div className="text-center max-w-2xl mx-auto space-y-2">
-                    <span className="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-extrabold rounded-full">
-                      結構化寫作大師
+                    <span className="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-extrabold rounded-full tracking-wider uppercase">
+                      結構化寫作金鑰
                     </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">高分英文作文結構模板</h2>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">高分英文作文結構模板庫</h2>
+                    <p className="text-slate-600 text-xs sm:text-sm">
+                      掌握雅思、托福、學測與商業 Email 的四大段落心法，直接複製實用句型。
+                    </p>
                   </div>
 
-                  <div className="space-y-6">
+                  {/* Templates List */}
+                  <div className="space-y-8">
                     {ESSAY_TEMPLATES.map((tmpl) => (
-                      <div key={tmpl.id} className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs space-y-5">
-                        <div>
-                          <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-extrabold rounded-full border border-indigo-200">
-                            {tmpl.category}
-                          </span>
-                          <h3 className="text-xl font-extrabold text-slate-900 mt-2">{tmpl.title}</h3>
-                          <p className="text-xs text-slate-500 mt-1">{tmpl.description}</p>
+                      <div key={tmpl.id} className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-4">
+                          <div>
+                            <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-extrabold rounded-md border border-indigo-100 inline-block mb-2">
+                              {tmpl.category}
+                            </span>
+                            <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">{tmpl.title}</h3>
+                            <p className="text-xs text-slate-500 mt-1">{tmpl.description}</p>
+                          </div>
                         </div>
 
+                        {/* Step Breakdown Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {tmpl.structure.map((item, idx) => (
-                            <div key={idx} className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2 text-xs">
-                              <span className="font-extrabold text-indigo-900 block">{item.section}</span>
-                              <p className="text-slate-500">💡 {item.tip}</p>
-                              <p className="font-bold text-slate-900 bg-white p-2.5 rounded border border-slate-100">
+                            <div key={idx} className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2.5 text-xs flex flex-col justify-between">
+                              <div className="space-y-1.5">
+                                <div className="flex justify-between items-center">
+                                  <span className="font-extrabold text-indigo-900 text-xs">{item.section}</span>
+                                  <button
+                                    onClick={() => handleCopyText(item.example, "句型範例")}
+                                    className="text-[11px] text-slate-400 hover:text-indigo-600 flex items-center space-x-1"
+                                    title="複製句型"
+                                  >
+                                    <Icon name="copy" className="w-3 h-3" />
+                                    <span>複製</span>
+                                  </button>
+                                </div>
+                                <p className="text-slate-500 text-[11px]">💡 {item.tip}</p>
+                              </div>
+                              <div className="font-medium text-slate-800 bg-white p-3 rounded-lg border border-slate-200/60 leading-relaxed font-sans">
                                 "{item.example}"
-                              </p>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -443,37 +814,178 @@
                 </div>
               )}
 
+              {/* TAB 3: TRANSITIONAL WORDS & SENTENCE ENHANCER */}
               {activeTab === 'transitions' && (
-                <div className="space-y-8 animate-fadeIn">
+                <div className="space-y-10 animate-fadeIn">
+                  {/* Header Intro */}
                   <div className="text-center max-w-2xl mx-auto space-y-2">
-                    <span className="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-extrabold rounded-full">
-                      文章流暢度突破
+                    <span className="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-extrabold rounded-full tracking-wider uppercase">
+                      邏輯銜接與語意升級
                     </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">高階轉折詞與邏輯銜接</h2>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">高階轉折詞庫 & AI 換句話說</h2>
+                    <p className="text-slate-600 text-xs sm:text-sm">
+                      擺脫平淡句型，靈活運用因果、對比與遞進連詞，提升文章邏輯嚴密度。
+                    </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {TRANSITION_WORDS.map((cat, idx) => (
-                      <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                        <h3 className="text-base font-extrabold text-slate-900 border-b border-slate-100 pb-3">
-                          {cat.category}
-                        </h3>
+                  {/* SECTION A: SENTENCE ENHANCER AI TOOL */}
+                  <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-indigo-800/80 pb-4">
+                      <div>
+                        <span className="px-2.5 py-1 bg-indigo-500/30 text-indigo-200 text-xs font-extrabold rounded-md border border-indigo-400/30 inline-block mb-1">
+                          ✨ BONUS TOOL
+                        </span>
+                        <h3 className="text-lg sm:text-xl font-extrabold tracking-tight">AI 換句話說與句型升級器 (Sentence Elevator)</h3>
+                      </div>
+                      <span className="text-xs text-indigo-300">輸入簡單英文，一鍵轉換為高階句型</span>
+                    </div>
 
-                        <div className="space-y-3">
-                          {cat.words.map((item, j) => (
-                            <div key={j} className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-xs space-y-1">
-                              <span className="font-black text-indigo-800 block">{item.word}</span>
-                              <span className="text-slate-500 block">{item.usage}</span>
-                              <p className="text-slate-900 font-medium italic pt-1">"{item.example}"</p>
-                            </div>
-                          ))}
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="text-indigo-300 font-bold self-center">快速試用預設句：</span>
+                        {ENHANCER_PRESETS.map((preset, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setInputSentence(preset)}
+                            className="px-2.5 py-1 bg-indigo-800/50 hover:bg-indigo-700/60 text-indigo-100 rounded-lg border border-indigo-700 text-[11px] transition-colors"
+                          >
+                            "{preset.substring(0, 24)}..."
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          type="text"
+                          value={inputSentence}
+                          onChange={(e) => setInputSentence(e.target.value)}
+                          placeholder="例如: I think this problem is very bad..."
+                          className="flex-1 px-4 py-3 bg-slate-800/90 border border-indigo-700/60 rounded-xl text-xs sm:text-sm font-medium text-white placeholder-slate-400 focus:outline-none focus:border-indigo-400"
+                        />
+                        <button
+                          onClick={enhanceSentenceWithGemini}
+                          disabled={isEnhancing}
+                          className="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center space-x-2 shrink-0 shadow-md"
+                        >
+                          <Icon name="sparkles" className={`w-4 h-4 ${isEnhancing ? 'animate-spin' : ''}`} />
+                          <span>{isEnhancing ? '生成中...' : '句型三重升級'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Enhancer Results */}
+                    {enhancements && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-indigo-800/60 animate-fadeIn">
+                        {/* Academic Style */}
+                        <div className="bg-slate-800/80 p-4 rounded-xl border border-indigo-500/30 space-y-2">
+                          <span className="text-xs font-extrabold text-indigo-300 uppercase tracking-wider block">🎓 學術論文風格 (Academic)</span>
+                          <p className="text-xs sm:text-sm font-bold text-white leading-relaxed">"{enhancements.academic?.sentence}"</p>
+                          <p className="text-[11px] text-slate-300 border-t border-slate-700/60 pt-2">{enhancements.academic?.explanation}</p>
+                        </div>
+                        {/* Business Style */}
+                        <div className="bg-slate-800/80 p-4 rounded-xl border border-indigo-500/30 space-y-2">
+                          <span className="text-xs font-extrabold text-emerald-300 uppercase tracking-wider block">💼 正式商務風格 (Business)</span>
+                          <p className="text-xs sm:text-sm font-bold text-white leading-relaxed">"{enhancements.business?.sentence}"</p>
+                          <p className="text-[11px] text-slate-300 border-t border-slate-700/60 pt-2">{enhancements.business?.explanation}</p>
+                        </div>
+                        {/* Vivid Style */}
+                        <div className="bg-slate-800/80 p-4 rounded-xl border border-indigo-500/30 space-y-2">
+                          <span className="text-xs font-extrabold text-amber-300 uppercase tracking-wider block">🎨 生動修辭風格 (Vivid)</span>
+                          <p className="text-xs sm:text-sm font-bold text-white leading-relaxed">"{enhancements.vivid?.sentence}"</p>
+                          <p className="text-[11px] text-slate-300 border-t border-slate-700/60 pt-2">{enhancements.vivid?.explanation}</p>
                         </div>
                       </div>
-                    ))}
+                    )}
+                  </div>
+
+                  {/* SECTION B: TRANSITIONAL WORDS DIRECTORY */}
+                  <div className="space-y-6">
+                    {/* Search & Filter Bar */}
+                    <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row gap-4 justify-between items-center">
+                      {/* Category Filters */}
+                      <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
+                        {['All', '遞進', '轉折', '因果', '舉例', '總結'].map((cat) => (
+                          <button
+                            key={cat}
+                            onClick={() => setSelectedCategory(cat)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                              selectedCategory === cat
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {cat === 'All' ? '全部類別' : cat}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Search Bar */}
+                      <div className="relative w-full sm:w-64">
+                        <Icon name="search" className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input
+                          type="text"
+                          value={searchKeyword}
+                          onChange={(e) => setSearchKeyword(e.target.value)}
+                          placeholder="搜尋轉折詞或例句..."
+                          className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-indigo-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Word Cards Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredTransitions.map((cat, idx) => (
+                        <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
+                          <div className="space-y-4">
+                            <h3 className="text-sm font-extrabold text-indigo-900 border-b border-slate-100 pb-3 flex items-center justify-between">
+                              <span>{cat.category}</span>
+                              <span className="text-[10px] px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full font-bold">
+                                {cat.words.length} 個高階詞
+                              </span>
+                            </h3>
+
+                            <div className="space-y-3.5">
+                              {cat.words.map((item, j) => (
+                                <div key={j} className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60 space-y-1.5 text-xs">
+                                  <div className="flex justify-between items-start">
+                                    <span className="font-black text-indigo-800 text-sm">{item.word}</span>
+                                    <button
+                                      onClick={() => handleCopyText(item.word, "轉折詞")}
+                                      className="text-slate-400 hover:text-indigo-600"
+                                      title="複製詞彙"
+                                    >
+                                      <Icon name="copy" className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                  <span className="text-slate-500 block text-[11px] font-medium">{item.usage}</span>
+                                  <p className="text-slate-800 font-medium italic pt-1 text-[11px] border-t border-slate-200/50 mt-1">
+                                    "{item.example}"
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {filteredTransitions.length === 0 && (
+                      <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 text-slate-400 text-xs">
+                        找不到符合「{searchKeyword}」的轉折詞。
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
             </main>
+
+            {/* Footer */}
+            <footer className="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-500">
+              <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+                <p className="font-medium">WritingMaster 英文寫作大師 • AI 實時作文批改與結構化寫作訓練平台</p>
+                <p className="text-slate-400 text-[11px]">Powered by Gemini 3 Flash API</p>
+              </div>
+            </footer>
           </div>
         );
       }
