@@ -70,9 +70,7 @@
           'zap': <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,
           'arrow-right': <><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>,
           'thumbs-up': <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>,
-          'alert-triangle': <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
-          'key': <><path d="m21 2-2 2m-1.5 1.5L14 9.5a5 5 0 1 0-4.5 4.5l6-6M18 6l2.5 2.5"/></>,
-          'x': <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
+          'alert-triangle': <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>
         };
         return (
           <svg
@@ -144,7 +142,8 @@
           ]
         },
         {
-          id: 'email-formal',          title: '商務商談與合作 Email (Formal Business Proposal Email)',
+          id: 'email-formal',
+          title: '商務商談與合作 Email (Formal Business Proposal Email)',
           category: '職場與商務應用',
           description: '適用於洽談跨國合作、產品詢價、提案跟進或商務簡報邀請。',
           structure: [
@@ -252,112 +251,126 @@
         "The government should give more money to help poor students."
       ];
 
-      // Smart Pure-Local Analysis Engine (No API Key Required - Guaranteed to work on GitHub Pages)
+      // Dynamic Pure-Local Analysis Engine (No API Key Required & Dynamic per Essay)
       const runSmartLocalAnalysis = (prompt, text) => {
-        const words = text.trim().split(/\s+/).filter(Boolean).length;
-        let score = 75;
-        if (words > 80) score += 6;
-        if (words > 120) score += 8;
-        if (words > 180) score += 4;
+        const cleanText = text.trim();
+        const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(Boolean);
+        const sentenceCount = sentences.length || 1;
+        const words = cleanText.split(/\s+/).filter(Boolean);
+        const wordCount = words.length;
+        const avgSentenceLength = Math.round(wordCount / sentenceCount);
 
-        // Extract and enhance basic words
+        // Word variety check (Unique words ratio)
+        const uniqueWords = new Set(words.map(w => w.toLowerCase().replace(/[^a-z]/g, '')));
+        const lexicalDiversity = Math.min(Math.round((uniqueWords.size / (wordCount || 1)) * 100), 100);
+
+        // Count academic / complex transition markers
+        const transitionMatches = (cleanText.match(/\b(however|furthermore|moreover|consequently|therefore|nevertheless|in addition|for instance|to illustrate|on the other hand|in conclusion)\b/gi) || []).length;
+        
+        // Calculate Dynamic Scores
+        let score = 60;
+        if (wordCount >= 200) score += 15;
+        else if (wordCount >= 120) score += 10;
+        else if (wordCount >= 60) score += 5;
+
+        if (lexicalDiversity > 60) score += 12;
+        else if (lexicalDiversity > 40) score += 8;
+
+        if (transitionMatches >= 3) score += 10;
+        else if (transitionMatches >= 1) score += 5;
+
+        if (avgSentenceLength >= 12 && avgSentenceLength <= 25) score += 8;
+
+        score = Math.min(Math.max(score, 55), 96);
+
+        // Dynamic Rule Matcher & Sentence Replacement List
+        const replacementRules = [
+          { pattern: /\bmade huge progress\b/gi, replacement: "achieved substantial advancement", note: "將通俗的 made huge progress 替換為學術動詞名詞搭配 achieved substantial advancement。" },
+          { pattern: /\btake away millions of human jobs\b/gi, replacement: "displace a significant portion of the workforce", note: "採用專業就業市場詞彙 displace workforce 替代口語化表達。" },
+          { pattern: /\bvery important\b/gi, replacement: "of paramount importance", note: "將副詞很重要的 very important 升級為介詞高階片語 of paramount importance。" },
+          { pattern: /\bvery popular\b/gi, replacement: "increasingly prevalent", note: "使用學術形容詞 prevalent 來描述現象普及。" },
+          { pattern: /\bvery good\b/gi, replacement: "highly advantageous", note: "形容詞升級：用 highly advantageous 替代過於頻繁出現的 good。" },
+          { pattern: /\bvery bad\b/gi, replacement: "severely detrimental", note: "形容詞升級：用 detrimental 強化負面影響的警示感。" },
+          { pattern: /\bI think\b/gi, replacement: "From my point of view", note: "避免過於強烈的主觀一號稱呼 I think，改用客觀引述語帶入論點。" },
+          { pattern: /\bmany people\b/gi, replacement: "a substantial number of individuals", note: "將基礎名詞 many people 擴充為高級量詞與名詞組合。" },
+          { pattern: /\bbig problem\b/gi, replacement: "pressing challenge", note: "用 pressing challenge 替代大問題，使語氣更精準專業。" },
+          { pattern: /\bmake progress\b/gi, replacement: "demonstrate measurable improvement", note: "用 demonstrate measurable improvement 代替口語動詞進步。" }
+        ];
+
         const corrections = [];
-        if (/made huge progress/i.test(text)) {
-          corrections.push({
-            original: "made huge progress",
-            corrected: "achieved substantial advancement",
-            reason: "使用 achieved substantial advancement 替換基礎口語，增強學術正式感。"
-          });
-        }
-        if (/take away millions of human jobs/i.test(text)) {
-          corrections.push({
-            original: "take away millions of human jobs",
-            corrected: "displace a significant portion of the workforce",
-            reason: "displace workforce 為更高階且專業的就業議題詞彙。"
-          });
-        }
-        if (/very important/i.test(text)) {
-          corrections.push({
-            original: "very important",
-            corrected: "of paramount importance / crucial",
-            reason: "避免重複使用 very，改用學術介詞結構 of paramount importance 可顯著提高詞彙量得分。"
-          });
-        }
-        if (/very popular/i.test(text)) {
-          corrections.push({
-            original: "very popular",
-            corrected: "increasingly prevalent",
-            reason: "使用 prevalent 代替 popular，能使描繪現象的文風更具學術質感。"
+        let modifiedText = cleanText;
+
+        replacementRules.forEach(rule => {
+          const matches = cleanText.match(rule.pattern);
+          if (matches) {
+            const originalMatch = matches[0];
+            if (!corrections.some(c => c.original.toLowerCase() === originalMatch.toLowerCase())) {
+              corrections.push({
+                original: originalMatch,
+                corrected: rule.replacement,
+                reason: rule.note
+              });
+            }
+            modifiedText = modifiedText.replace(rule.pattern, rule.replacement);
+          }
+        });
+
+        if (corrections.length === 0) {
+          sentences.slice(0, 2).forEach(s => {
+            if (s.length > 10) {
+              corrections.push({
+                original: s.trim(),
+                corrected: `Furthermore, ${s.replace(/^I think/i, 'it can be observed that').trim()}`,
+                reason: "優化句子開頭，加入邏輯銜接副詞以增強句構間的推進感。"
+              });
+            }
           });
         }
 
-        // Standard default corrections if specific patterns aren't triggered
-        if (corrections.length === 0) {
-          corrections.push(
-            {
-              original: "I think",
-              corrected: "It is widely acknowledged that / From my perspective",
-              reason: "在學術論文或高階英文寫作中，建議減少主觀口語使用，採用客觀被動語態或高級轉折詞。"
-            },
-            {
-              original: "very good",
-              corrected: "highly advantageous / exceptionally beneficial",
-              reason: "使用更具體的形容詞替換過於通俗的 good。"
-            }
-          );
-        }
+        const grammarAndVocab = `文章總計 ${wordCount} 字，使用了約 ${uniqueWords.size} 個獨立詞彙（詞彙豐富度 ${lexicalDiversity}%）。${
+          lexicalDiversity < 50 ? '建議減少常用詞彙（如 good, bad, many）的重複次數。' : '展現了良好的詞彙運用靈活性。'
+        }`;
+
+        const structureAndCoherence = `平均句長約 ${avgSentenceLength} 字/句。文中包含 ${transitionMatches} 個邏輯銜接轉折詞。${
+          transitionMatches < 2 ? '建議適度增加如 Furthermore, However, Consequently 等高級連接詞。' : '段落轉折與邏輯推論鋪陳相當連貫。'
+        }`;
+
+        const contentAndTaskAchievement = `文章回應了議題「${prompt || '寫作題目'}」。針對核心觀點切入清晰，完整呈現了個人論述方向。`;
 
         return {
-          overallScore: Math.min(score, 95),
+          overallScore: score,
           scoreBreakdown: {
-            grammarAndVocab: "整體基礎語法清晰，句子結構流暢，但建議升級基礎形容詞（如 very good, big）以展現高階詞彙量。",
-            structureAndCoherence: "段落分明，前後轉折適當，若能運用更高階的邏輯銜接詞（如 Furthermore, Consequently）效果更佳。",
-            contentAndTaskAchievement: "核心論點明確且切合主題，舉例說明充分，論述展現了良好的邏輯脈絡。"
+            grammarAndVocab,
+            structureAndCoherence,
+            contentAndTaskAchievement
           },
           strengths: [
-            "觀點明確且切中題目核心要求",
-            "句子語法結構整體通順，容易理解閱讀"
+            `文章長度達到 ${wordCount} 字，符合標準篇幅要求`,
+            lexicalDiversity > 45 ? "詞彙重複率低，具備基礎的豐富度" : "主題論述立場明確，語意表達清晰"
           ],
           weaknesses: [
-            "部分基礎動詞與形容詞重複率較高",
-            "複合句與關聯子句比重可適度增加"
+            transitionMatches < 2 ? "段落銜接詞偏少，文意轉折可再加強" : "句型結構偏向單一，可適度加入從句或倒裝句",
+            "部分形容詞與動詞搭配有進一步道地化的空間"
           ],
           grammarCorrections: corrections,
-          improvedVersion: text
-            .replace(/made huge progress/gi, "achieved substantial advancement")
-            .replace(/take away millions of human jobs/gi, "displace a significant portion of the workforce")
-            .replace(/very important/gi, "of paramount importance")
-            .replace(/very popular/gi, "increasingly prevalent")
-            .replace(/I think/gi, "From my perspective,")
-            .replace(/very good/gi, "exceptionally beneficial")
+          improvedVersion: modifiedText
         };
       };
 
       const runSmartLocalEnhancement = (sentence) => {
+        const trimmed = sentence.trim();
         return {
           academic: {
-            sentence: sentence
-              .replace(/I think/gi, "It is widely contended that")
-              .replace(/very good/gi, "exceptionally beneficial")
-              .replace(/very bad/gi, "highly detrimental")
-              .replace(/useful/gi, "advantageous")
-              .replace(/many people/gi, "a substantial number of individuals"),
-            explanation: "替換主觀動詞為客觀學術被動句型，並升級形容詞等級。"
+            sentence: trimmed.replace(/good/gi, "highly beneficial").replace(/bad/gi, "severely detrimental").replace(/I think/gi, "Evidence indicates that").replace(/many people/gi, "a significant portion of the populace"),
+            explanation: "替換基礎口語形容詞，並使用更加客觀學術的第三人稱引述。"
           },
           business: {
-            sentence: sentence
-              .replace(/I think/gi, "From a strategic standpoint,")
-              .replace(/useful/gi, "highly efficient")
-              .replace(/very good/gi, "of premium quality")
-              .replace(/makes people unhappy/gi, "negatively impacts user satisfaction"),
-            explanation: "採用商務簡報與職場正式書信常用引述詞，提升專業質感。"
+            sentence: trimmed.replace(/good/gi, "cost-effective and advantageous").replace(/bad/gi, "counterproductive").replace(/I think/gi, "From a strategic standpoint,").replace(/many people/gi, "key industry stakeholders"),
+            explanation: "融入商業溝通情境用語（如語氣更加專業務實的詞彙及觀點引導）。"
           },
           vivid: {
-            sentence: sentence
-              .replace(/very good/gi, "tremendously impactful")
-              .replace(/very bad/gi, "disastrous")
-              .replace(/unhappy/gi, "disheartened"),
-            explanation: "使用強烈語氣副詞與生動形容詞，大幅增強句子感染力。"
+            sentence: trimmed.replace(/good/gi, "remarkably exceptional").replace(/bad/gi, "disastrous").replace(/I think/gi, "It is overwhelmingly evident that").replace(/many people/gi, "countless individuals"),
+            explanation: "運用生動修辭與強烈情緒形容詞，強化文意的視覺渲染感與說服力。"
           }
         };
       };
@@ -367,7 +380,7 @@
         const [selectedPromptId, setSelectedPromptId] = useState(1);
         const [essayPrompt, setEssayPrompt] = useState(PRESET_PROMPTS[0].prompt);
         const [userEssay, setUserEssay] = useState(PRESET_PROMPTS[0].sampleText);
-
+        
         // AI Review State
         const [isAnalyzing, setIsAnalyzing] = useState(false);
         const [aiFeedback, setAiFeedback] = useState(null);
@@ -390,7 +403,7 @@
           if (!trimmed) return { words: 0, chars: 0, readingTime: 0 };
           const words = trimmed.split(/\s+/).filter(Boolean).length;
           const chars = userEssay.length;
-          const readingTime = Math.ceil(words / 200); // 200 wpm average
+          const readingTime = Math.ceil(words / 200);
           return { words, chars, readingTime };
         }, [userEssay]);
 
@@ -419,8 +432,8 @@
           document.body.removeChild(textarea);
         };
 
-        // Pure Local Analysis (Zero network failure risk)
-        const analyzeEssayWithGemini = () => {
+        // Pure Local Smart Essay Analysis Engine (GitHub Pages 100% Reliable & Dynamic)
+        const analyzeEssayLocally = () => {
           if (!userEssay.trim()) {
             alert('請先輸入或粘貼您的英文文章！');
             return;
@@ -430,23 +443,23 @@
           setAiFeedback(null);
 
           setTimeout(() => {
-            const result = runSmartLocalAnalysis(essayPrompt, userEssay);
-            setAiFeedback(result);
+            const feedback = runSmartLocalAnalysis(essayPrompt, userEssay);
+            setAiFeedback(feedback);
             setIsAnalyzing(false);
-            showToast("批改診斷完成！");
+            showToast("智能批改完成！");
           }, 600);
         };
 
-        // Pure Local Sentence Enhancer
-        const enhanceSentenceWithGemini = () => {
+        // Pure Local Sentence Enhancer Engine
+        const enhanceSentenceLocally = () => {
           if (!inputSentence.trim()) return;
 
           setIsEnhancing(true);
           setEnhancements(null);
 
           setTimeout(() => {
-            const result = runSmartLocalEnhancement(inputSentence);
-            setEnhancements(result);
+            const res = runSmartLocalEnhancement(inputSentence);
+            setEnhancements(res);
             setIsEnhancing(false);
             showToast("句子升級成功！");
           }, 400);
@@ -529,7 +542,7 @@
                         <Icon name="zap" className="w-4 h-4" />
                         <span>熱門精選寫作題目 (Presets)</span>
                       </span>
-                      <span className="text-xs text-slate-400 font-medium">點擊套用題目與範據草稿</span>
+                      <span className="text-xs text-slate-400 font-medium">點擊套用題目與範例草稿</span>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -573,134 +586,193 @@
                         </div>
                         <div className="flex items-center space-x-3 text-xs text-slate-500 font-medium">
                           <span>字數: <strong className="text-slate-800">{wordStats.words}</strong></span>
-                          <span>閱讀時間: <strong className="text-slate-800">{wordStats.readingTime} min</strong></span>
+                          <span>預估閱讀: <strong className="text-slate-800">{wordStats.readingTime} 分鐘</strong></span>
                         </div>
                       </div>
 
                       <textarea
                         value={userEssay}
                         onChange={(e) => setUserEssay(e.target.value)}
-                        placeholder="在此輸入或粘貼您的英文文章..."
-                        rows={14}
-                        className="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl text-sm leading-relaxed font-sans text-slate-800 focus:outline-none focus:border-indigo-500 custom-scrollbar resize-none transition-colors"
+                        placeholder="請在此輸入或粘貼您的英文作文草稿..."
+                        rows={16}
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm leading-relaxed text-slate-800 font-normal focus:outline-none focus:bg-white focus:border-indigo-500 transition-all resize-none custom-scrollbar"
                       />
 
-                      <div className="flex justify-between items-center pt-2">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                        <div className="flex items-center space-x-2 w-full sm:w-auto">
+                          <button
+                            onClick={() => handleCopyText(userEssay, "草稿")}
+                            className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center space-x-1.5 border border-slate-200 w-full sm:w-auto"
+                          >
+                            <Icon name="copy" className="w-3.5 h-3.5" />
+                            <span>複製內容</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setUserEssay('');
+                              setAiFeedback(null);
+                            }}
+                            className="px-3.5 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center space-x-1.5 border border-rose-100 w-full sm:w-auto"
+                          >
+                            <Icon name="trash-2" className="w-3.5 h-3.5" />
+                            <span>清空</span>
+                          </button>
+                        </div>
+
                         <button
-                          onClick={() => setUserEssay('')}
-                          className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors flex items-center space-x-1"
-                        >
-                          <Icon name="trash-2" className="w-3.5 h-3.5" />
-                          <span>清空內容</span>
-                        </button>
-                        <button
-                          onClick={analyzeEssayWithGemini}
+                          onClick={analyzeEssayLocally}
                           disabled={isAnalyzing}
-                          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-bold rounded-xl shadow-md shadow-indigo-100 transition-all flex items-center space-x-2 text-xs sm:text-sm"
+                          className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isAnalyzing ? (
                             <>
                               <Icon name="refresh-cw" className="w-4 h-4 animate-spin" />
-                              <span>AI 診斷評析中...</span>
+                              <span>AI 診斷分析中...</span>
                             </>
                           ) : (
                             <>
                               <Icon name="sparkles" className="w-4 h-4" />
-                              <span>開始 AI 智能評分</span>
+                              <span>開始 AI 智能評分批改</span>
                             </>
                           )}
                         </button>
                       </div>
                     </div>
 
-                    {/* Right Panel: Diagnostic Results */}
-                    <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs min-h-[480px] flex flex-col justify-between">
-                      {isAnalyzing ? (
-                        <div className="flex-1 flex flex-col items-center justify-center space-y-3 py-12">
-                          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                          <p className="text-xs font-bold text-slate-500">正在分析文章語法、結構與詞彙品質...</p>
+                    {/* Right Panel: AI Review Feedback Report */}
+                    <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5 min-h-[500px]">
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <div className="flex items-center space-x-2">
+                          <Icon name="award" className="w-4 h-4 text-indigo-600" />
+                          <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">AI 評分報告與批改建議</span>
                         </div>
-                      ) : aiFeedback ? (
-                        <div className="space-y-6 animate-fadeIn">
-                          {/* Score Header */}
-                          <div className="flex justify-between items-center bg-indigo-50/60 p-4 rounded-xl border border-indigo-100">
+                        {aiFeedback && (
+                          <span className="text-xs font-bold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-200">
+                            已完成批改
+                          </span>
+                        )}
+                      </div>
+
+                      {!aiFeedback && !isAnalyzing && (
+                        <div className="h-[420px] flex flex-col items-center justify-center text-center p-6 text-slate-400 space-y-3">
+                          <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-500">
+                            <Icon name="sparkles" className="w-7 h-7" />
+                          </div>
+                          <div className="space-y-1">
+                            <h3 className="font-bold text-slate-700 text-sm">尚未開始評分</h3>
+                            <p className="text-xs text-slate-400 max-w-xs">
+                              點擊左側「開始 AI 智能評分批改」按鈕，獲取包含綜合分數、文法糾錯與高分範本診斷報告。
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {isAnalyzing && (
+                        <div className="h-[420px] flex flex-col items-center justify-center text-center p-6 space-y-4">
+                          <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 animate-spin">
+                            <Icon name="refresh-cw" className="w-6 h-6" />
+                          </div>
+                          <p className="text-xs font-bold text-slate-600">正在為您的文章進行全方位結構與文法診斷...</p>
+                        </div>
+                      )}
+
+                      {aiFeedback && !isAnalyzing && (
+                        <div className="space-y-5 animate-fadeIn">
+                          {/* Score Highlight Box */}
+                          <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white p-5 rounded-2xl shadow-sm flex items-center justify-between">
                             <div>
-                              <span className="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider block">Overall Assessment</span>
-                              <h3 className="font-extrabold text-slate-900 text-base">綜合評價報告</h3>
+                              <span className="text-[11px] font-extrabold uppercase tracking-wider opacity-80 block">綜合評估得分 (Overall Score)</span>
+                              <h2 className="text-3xl font-black mt-1">
+                                {aiFeedback.overallScore} <span className="text-sm font-semibold opacity-75">/ 100</span>
+                              </h2>
                             </div>
-                            <div className="flex items-baseline space-x-1 bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-sm">
-                              <span className="text-2xl font-black">{aiFeedback.overallScore}</span>
-                              <span className="text-[10px] font-bold opacity-80">/ 100</span>
-                            </div>
-                          </div>
-
-                          {/* Detail Breakdown */}
-                          <div className="space-y-3 text-xs">
-                            <div className="p-3 bg-slate-50 rounded-xl space-y-1">
-                              <span className="font-bold text-slate-700 flex items-center space-x-1.5">
-                                <Icon name="award" className="w-3.5 h-3.5 text-indigo-600" />
-                                <span>文法與詞彙多樣性</span>
-                              </span>
-                              <p className="text-slate-600 leading-relaxed">{aiFeedback.scoreBreakdown?.grammarAndVocab}</p>
-                            </div>
-                            <div className="p-3 bg-slate-50 rounded-xl space-y-1">
-                              <span className="font-bold text-slate-700 flex items-center space-x-1.5">
-                                <Icon name="layers" className="w-3.5 h-3.5 text-indigo-600" />
-                                <span>結構與連貫性</span>
-                              </span>
-                              <p className="text-slate-600 leading-relaxed">{aiFeedback.scoreBreakdown?.structureAndCoherence}</p>
+                            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center font-black text-lg border border-white/20">
+                              {aiFeedback.overallScore >= 80 ? 'A+' : aiFeedback.overallScore >= 70 ? 'B+' : 'C'}
                             </div>
                           </div>
 
-                          {/* Grammar Corrections */}
-                          {aiFeedback.grammarCorrections && aiFeedback.grammarCorrections.length > 0 && (
-                            <div className="space-y-2">
-                              <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">精細修正與道地表達建議</h4>
-                              <div className="space-y-2">
-                                {aiFeedback.grammarCorrections.map((corr, idx) => (
-                                  <div key={idx} className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl text-xs space-y-1.5">
-                                    <div className="flex items-center space-x-2 text-slate-400 font-mono line-through">
-                                      <span>{corr.original}</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2 text-emerald-700 font-semibold">
-                                      <Icon name="arrow-right" className="w-3.5 h-3.5 text-emerald-500" />
-                                      <span>{corr.corrected}</span>
-                                    </div>
-                                    <p className="text-[11px] text-slate-600 pt-0.5">{corr.reason}</p>
-                                  </div>
+                          {/* Detailed Score Breakdown */}
+                          <div className="space-y-2.5 text-xs">
+                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                              <span className="font-extrabold text-indigo-700">文法與詞彙多樣度</span>
+                              <p className="text-slate-600 leading-relaxed">{aiFeedback.scoreBreakdown.grammarAndVocab}</p>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                              <span className="font-extrabold text-indigo-700">文章結構與邏輯連貫</span>
+                              <p className="text-slate-600 leading-relaxed">{aiFeedback.scoreBreakdown.structureAndCoherence}</p>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                              <span className="font-extrabold text-indigo-700">內容切題與論證深度</span>
+                              <p className="text-slate-600 leading-relaxed">{aiFeedback.scoreBreakdown.contentAndTaskAchievement}</p>
+                            </div>
+                          </div>
+
+                          {/* Strengths & Weaknesses */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div className="p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl space-y-1.5">
+                              <span className="font-extrabold text-emerald-800 flex items-center space-x-1">
+                                <Icon name="thumbs-up" className="w-3.5 h-3.5" />
+                                <span>優勢亮點</span>
+                              </span>
+                              <ul className="list-disc list-inside text-emerald-900 space-y-1">
+                                {aiFeedback.strengths.map((s, idx) => (
+                                  <li key={idx}>{s}</li>
                                 ))}
-                              </div>
+                              </ul>
                             </div>
-                          )}
-
-                          {/* Improved Version Output */}
-                          {aiFeedback.improvedVersion && (
-                            <div className="space-y-2 pt-2 border-t border-slate-100">
-                              <div className="flex justify-between items-center">
-                                <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">潤色高分範本</h4>
-                                <button
-                                  onClick={() => handleCopyText(aiFeedback.improvedVersion, "高分範本")}
-                                  className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center space-x-1"
-                                >
-                                  <Icon name="copy" className="w-3 h-3" />
-                                  <span>複製全文</span>
-                                </button>
-                              </div>
-                              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-sans text-slate-700 leading-relaxed whitespace-pre-line">
-                                {aiFeedback.improvedVersion}
-                              </div>
+                            <div className="p-3 bg-amber-50/70 border border-amber-100 rounded-xl space-y-1.5">
+                              <span className="font-extrabold text-amber-800 flex items-center space-x-1">
+                                <Icon name="alert-triangle" className="w-3.5 h-3.5" />
+                                <span>升級建議</span>
+                              </span>
+                              <ul className="list-disc list-inside text-amber-900 space-y-1">
+                                {aiFeedback.weaknesses.map((w, idx) => (
+                                  <li key={idx}>{w}</li>
+                                ))}
+                              </ul>
                             </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
-                          <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
-                            <Icon name="book-open" className="w-6 h-6" />
                           </div>
-                          <h4 className="font-bold text-slate-800 text-sm">準備好分析您的文章了嗎？</h4>
-                          <p className="text-xs text-slate-400 max-w-xs">
-                            在左側編輯區輸入或挑選寫作草稿，點擊「開始 AI 智能評分」獲得深度診斷。
-                          </p>
+
+                          {/* Sentence Level Grammar Corrections */}
+                          <div className="space-y-3">
+                            <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center space-x-1">
+                              <Icon name="sparkles" className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>語句精緻化與改錯建議 ({aiFeedback.grammarCorrections.length})</span>
+                            </h4>
+
+                            {aiFeedback.grammarCorrections.map((corr, idx) => (
+                              <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
+                                <div className="flex items-start space-x-2">
+                                  <span className="px-1.5 py-0.5 bg-rose-100 text-rose-700 rounded text-[10px] font-bold shrink-0 mt-0.5">原本</span>
+                                  <span className="text-slate-600 line-through font-mono">{corr.original}</span>
+                                </div>
+                                <div className="flex items-start space-x-2">
+                                  <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold shrink-0 mt-0.5">推薦</span>
+                                  <span className="text-slate-900 font-bold font-mono">{corr.corrected}</span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 pt-1 border-t border-slate-200/60 leading-normal">
+                                  💡 {corr.reason}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Improved Full Essay Template */}
+                          <div className="space-y-2.5 pt-2">
+                            <div className="flex justify-between items-center">
+                              <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">重構潤飾範本全文</h4>
+                              <button
+                                onClick={() => handleCopyText(aiFeedback.improvedVersion, "重構範本")}
+                                className="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1"
+                              >
+                                <Icon name="copy" className="w-3.5 h-3.5" />
+                                <span>複製全文</span>
+                              </button>
+                            </div>
+                            <div className="p-4 bg-slate-900 text-slate-200 rounded-xl text-xs font-mono leading-relaxed whitespace-pre-wrap max-h-60 overflow-y-auto custom-scrollbar border border-slate-800">
+                              {aiFeedback.improvedVersion}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -708,50 +780,46 @@
                 </div>
               )}
 
-              {/* TAB 2: HIGH SCORE ESSAY TEMPLATES */}
+              {/* TAB 2: ESSAY TEMPLATES LIBRARY */}
               {activeTab === 'templates' && (
                 <div className="space-y-6 animate-fadeIn">
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-1">
-                    <h2 className="text-base font-extrabold text-slate-900">高分作文結構與模板庫</h2>
-                    <p className="text-xs text-slate-500">涵蓋學術議論文、商務書信、圖表分析等經典架構。</p>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+                    <h2 className="font-extrabold text-slate-900 text-base sm:text-lg">高分英文作文結構與萬用句型庫</h2>
+                    <p className="text-xs text-slate-500">掌握經典四段式文章脈絡，包含學術議論文、個人 SOP、商務信件與數據圖表分析。</p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {ESSAY_TEMPLATES.map((tmpl) => (
-                      <div key={tmpl.id} className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-start">
-                            <span className="text-[10px] font-extrabold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                              {tmpl.category}
-                            </span>
-                          </div>
-                          <h3 className="font-extrabold text-slate-900 text-base">{tmpl.title}</h3>
+                      <div key={tmpl.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 hover:border-indigo-200 transition-all">
+                        <div className="space-y-1">
+                          <span className="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider bg-indigo-50 px-2.5 py-1 rounded-md">
+                            {tmpl.category}
+                          </span>
+                          <h3 className="font-extrabold text-slate-900 text-base pt-2">{tmpl.title}</h3>
                           <p className="text-xs text-slate-500 leading-relaxed">{tmpl.description}</p>
-
-                          <div className="space-y-3 pt-2">
-                            {tmpl.structure.map((st, idx) => (
-                              <div key={idx} className="p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
-                                <div className="flex justify-between items-center">
-                                  <span className="font-bold text-slate-800">{st.section}</span>
-                                  <span className="text-[10px] text-indigo-600 font-medium">{st.tip}</span>
-                                </div>
-                                <p className="text-slate-600 italic font-serif pt-1">"{st.example}"</p>
-                              </div>
-                            ))}
-                          </div>
                         </div>
 
-                        <div className="pt-2">
-                          <button
-                            onClick={() => {
-                              const fullText = tmpl.structure.map(s => s.example).join('\n\n');
-                              handleCopyText(fullText, tmpl.title);
-                            }}
-                            className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center justify-center space-x-1.5"
-                          >
-                            <Icon name="copy" className="w-3.5 h-3.5" />
-                            <span>複製完整範例結構</span>
-                          </button>
+                        <div className="space-y-3 pt-2">
+                          {tmpl.structure.map((sec, idx) => (
+                            <div key={idx} className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5 text-xs">
+                              <div className="flex justify-between items-center font-bold text-slate-800">
+                                <span>{sec.section}</span>
+                                <span className="text-[10px] text-indigo-600 font-semibold bg-white px-2 py-0.5 rounded border border-slate-200">{sec.tip}</span>
+                              </div>
+                              <p className="text-slate-600 italic font-mono bg-white p-2.5 rounded-lg border border-slate-200/60 leading-relaxed">
+                                "{sec.example}"
+                              </p>
+                              <div className="text-right pt-1">
+                                <button
+                                  onClick={() => handleCopyText(sec.example, sec.section)}
+                                  className="text-[11px] font-bold text-indigo-600 hover:underline inline-flex items-center space-x-1"
+                                >
+                                  <Icon name="copy" className="w-3 h-3" />
+                                  <span>複製例句</span>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ))}
@@ -759,135 +827,184 @@
                 </div>
               )}
 
-              {/* TAB 3: TRANSITIONS & SENTENCE ENHANCER */}
+              {/* TAB 3: TRANSITIONAL WORDS & SENTENCE ENHANCER */}
               {activeTab === 'transitions' && (
                 <div className="space-y-8 animate-fadeIn">
-                  {/* Interactive Sentence Enhancer Tool */}
+                  {/* Tool 1: AI Sentence Enhancer */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                    <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-                      <Icon name="sparkles" className="w-5 h-5 text-indigo-600" />
-                      <div>
-                        <h2 className="text-base font-extrabold text-slate-900">換句話說與高階句型改寫引擎</h2>
-                        <p className="text-xs text-slate-500">將簡單平淡的英文句子升級為學術或商務道地表達。</p>
-                      </div>
+                    <div className="border-b border-slate-100 pb-3">
+                      <span className="text-xs font-extrabold text-indigo-600 uppercase tracking-wider flex items-center space-x-1.5">
+                        <Icon name="sparkles" className="w-4 h-4" />
+                        <span>「換句話說」句子三升級工具 (Sentence Enhancer)</span>
+                      </span>
+                      <p className="text-xs text-slate-500 mt-1">輸入一句平淡或基礎的英文句子，自動升級為學術、商務與生動修辭等 3 種語氣表達。</p>
                     </div>
 
                     <div className="space-y-3">
-                      <div className="flex flex-wrap gap-2">
-                        <span className="text-xs font-bold text-slate-400 self-center mr-1">快速試用:</span>
-                        {ENHANCER_PRESETS.map((preset, i) => (
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="text-slate-400 font-bold self-center">預設測試句:</span>
+                        {ENHANCER_PRESETS.map((preset, idx) => (
                           <button
-                            key={i}
+                            key={idx}
                             onClick={() => setInputSentence(preset)}
-                            className="text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1 rounded-xl text-slate-600 font-medium transition-colors"
+                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors truncate max-w-[200px]"
                           >
-                            "{preset}"
+                            {preset}
                           </button>
                         ))}
                       </div>
 
-                      <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <input
                           type="text"
                           value={inputSentence}
                           onChange={(e) => setInputSentence(e.target.value)}
-                          placeholder="輸入您想升級的英文句子..."
-                          className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:border-indigo-500"
+                          placeholder="例如：I think this idea is very good..."
+                          className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-indigo-500 transition-colors"
                         />
                         <button
-                          onClick={enhanceSentenceWithGemini}
+                          onClick={enhanceSentenceLocally}
                           disabled={isEnhancing}
-                          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center space-x-2 text-xs sm:text-sm whitespace-nowrap"
+                          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-xs transition-all flex items-center justify-center space-x-2 shrink-0 disabled:opacity-50"
                         >
                           {isEnhancing ? (
                             <>
                               <Icon name="refresh-cw" className="w-4 h-4 animate-spin" />
-                              <span>升級中...</span>
+                              <span>分析改寫中...</span>
                             </>
                           ) : (
                             <>
-                              <Icon name="zap" className="w-4 h-4" />
-                              <span>一鍵高階改寫</span>
+                              <Icon name="sparkles" className="w-4 h-4" />
+                              <span>一鍵替換升級</span>
                             </>
                           )}
                         </button>
                       </div>
                     </div>
 
-                    {/* Enhancement Output */}
+                    {/* Enhancements Output */}
                     {enhancements && (
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 animate-fadeIn">
+                        {/* Academic */}
                         <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-2">
-                          <span className="text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider block">Academic (學術風格)</span>
-                          <p className="text-xs font-bold text-slate-800">{enhancements.academic?.sentence}</p>
-                          <p className="text-[11px] text-slate-500">{enhancements.academic?.explanation}</p>
+                          <span className="px-2 py-0.5 bg-indigo-600 text-white rounded text-[10px] font-extrabold uppercase">
+                            學術風格 (Academic)
+                          </span>
+                          <p className="text-xs font-mono font-bold text-slate-900 leading-relaxed pt-1">
+                            "{enhancements.academic.sentence}"
+                          </p>
+                          <p className="text-[11px] text-slate-500 pt-1 border-t border-indigo-100">
+                            💡 {enhancements.academic.explanation}
+                          </p>
+                          <button
+                            onClick={() => handleCopyText(enhancements.academic.sentence, "學術句子")}
+                            className="text-[11px] font-bold text-indigo-600 hover:underline flex items-center space-x-1 pt-1"
+                          >
+                            <Icon name="copy" className="w-3 h-3" />
+                            <span>複製句子</span>
+                          </button>
                         </div>
+
+                        {/* Business */}
                         <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl space-y-2">
-                          <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider block">Formal Business (商務正式)</span>
-                          <p className="text-xs font-bold text-slate-800">{enhancements.business?.sentence}</p>
-                          <p className="text-[11px] text-slate-500">{enhancements.business?.explanation}</p>
+                          <span className="px-2 py-0.5 bg-emerald-600 text-white rounded text-[10px] font-extrabold uppercase">
+                            商務正式 (Formal Business)
+                          </span>
+                          <p className="text-xs font-mono font-bold text-slate-900 leading-relaxed pt-1">
+                            "{enhancements.business.sentence}"
+                          </p>
+                          <p className="text-[11px] text-slate-500 pt-1 border-t border-emerald-100">
+                            💡 {enhancements.business.explanation}
+                          </p>
+                          <button
+                            onClick={() => handleCopyText(enhancements.business.sentence, "商務句子")}
+                            className="text-[11px] font-bold text-emerald-600 hover:underline flex items-center space-x-1 pt-1"
+                          >
+                            <Icon name="copy" className="w-3 h-3" />
+                            <span>複製句子</span>
+                          </button>
                         </div>
+
+                        {/* Vivid */}
                         <div className="p-4 bg-amber-50/50 border border-amber-100 rounded-xl space-y-2">
-                          <span className="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider block">Vivid Rhetoric (生動修辭)</span>
-                          <p className="text-xs font-bold text-slate-800">{enhancements.vivid?.sentence}</p>
-                          <p className="text-[11px] text-slate-500">{enhancements.vivid?.explanation}</p>
+                          <span className="px-2 py-0.5 bg-amber-600 text-white rounded text-[10px] font-extrabold uppercase">
+                            生動修辭 (Vivid)
+                          </span>
+                          <p className="text-xs font-mono font-bold text-slate-900 leading-relaxed pt-1">
+                            "{enhancements.vivid.sentence}"
+                          </p>
+                          <p className="text-[11px] text-slate-500 pt-1 border-t border-amber-100">
+                            💡 {enhancements.vivid.explanation}
+                          </p>
+                          <button
+                            onClick={() => handleCopyText(enhancements.vivid.sentence, "生動句子")}
+                            className="text-[11px] font-bold text-amber-600 hover:underline flex items-center space-x-1 pt-1"
+                          >
+                            <Icon name="copy" className="w-3 h-3" />
+                            <span>複製句子</span>
+                          </button>
                         </div>
                       </div>
                     )}
                   </div>
 
-                  {/* Transition Words Library */}
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+                  {/* Tool 2: Transition Words Dictionary */}
+                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
                       <div>
-                        <h2 className="text-base font-extrabold text-slate-900">寫作轉折詞與銜接詞速查庫</h2>
-                        <p className="text-xs text-slate-500">使用層次豐富的轉折詞提升文章連貫度分數。</p>
+                        <h2 className="font-extrabold text-slate-900 text-base">高階英文轉折詞與邏輯銜接字典</h2>
+                        <p className="text-xs text-slate-500 mt-0.5">提升作文句構連貫性（Coherence & Cohesion）的必備靈感庫。</p>
                       </div>
 
-                      {/* Search Filter */}
-                      <div className="relative w-full sm:w-64">
-                        <input
-                          type="text"
-                          value={searchKeyword}
-                          onChange={(e) => setSearchKeyword(e.target.value)}
-                          placeholder="搜尋轉折詞或用法..."
-                          className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-indigo-500"
-                        />
-                        <div className="absolute left-3 top-2.5 text-slate-400">
-                          <Icon name="search" className="w-3.5 h-3.5" />
+                      <div className="flex items-center space-x-2 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:w-48">
+                          <input
+                            type="text"
+                            value={searchKeyword}
+                            onChange={(e) => setSearchKeyword(e.target.value)}
+                            placeholder="搜尋轉折詞或關鍵字..."
+                            className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-indigo-500"
+                          />
+                          <Icon name="search" className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                         </div>
                       </div>
                     </div>
 
-                    {/* Transition Categories List */}
                     <div className="space-y-6">
-                      {filteredTransitions.map((cat, idx) => (
-                        <div key={idx} className="space-y-3">
-                          <h3 className="text-xs font-extrabold text-indigo-600 uppercase tracking-wider flex items-center space-x-1.5">
-                            <Icon name="layers" className="w-3.5 h-3.5" />
-                            <span>{cat.category}</span>
-                          </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {cat.words.map((w, wIdx) => (
-                              <div key={wIdx} className="p-4 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2 hover:border-indigo-200 transition-colors">
-                                <div className="flex justify-between items-center">
-                                  <span className="font-extrabold text-slate-900 text-xs">{w.word}</span>
-                                  <button
-                                    onClick={() => handleCopyText(w.word, "轉折詞")}
-                                    className="text-slate-400 hover:text-indigo-600 transition-colors"
-                                  >
-                                    <Icon name="copy" className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                                <p className="text-[11px] font-medium text-slate-500">{w.usage}</p>
-                                <p className="text-[11px] text-slate-700 italic border-t border-slate-200/60 pt-2 font-serif">
-                                  "{w.example}"
-                                </p>
-                              </div>
-                            ))}
-                          </div>
+                      {filteredTransitions.length === 0 ? (
+                        <div className="text-center py-8 text-xs text-slate-400">
+                          未找到匹配的轉折詞，請嘗試替換關鍵字。
                         </div>
-                      ))}
+                      ) : (
+                        filteredTransitions.map((cat, idx) => (
+                          <div key={idx} className="space-y-3">
+                            <h3 className="text-xs font-extrabold text-indigo-700 uppercase tracking-wider flex items-center space-x-1.5">
+                              <span className="w-2 h-2 bg-indigo-600 rounded-full"></span>
+                              <span>{cat.category}</span>
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {cat.words.map((item, itemIdx) => (
+                                <div key={itemIdx} className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2 hover:bg-white hover:border-indigo-200 transition-all text-xs">
+                                  <div className="flex justify-between items-center">
+                                    <span className="font-extrabold text-slate-900 font-mono text-sm">{item.word}</span>
+                                    <button
+                                      onClick={() => handleCopyText(item.word, "轉折詞")}
+                                      className="text-slate-400 hover:text-indigo-600 transition-colors"
+                                    >
+                                      <Icon name="copy" className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                  <p className="text-[11px] text-slate-600 font-medium">{item.usage}</p>
+                                  <p className="text-[11px] text-slate-500 italic bg-white p-2 rounded-lg border border-slate-100 font-mono leading-relaxed">
+                                    "{item.example}"
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -895,10 +1012,8 @@
             </main>
 
             {/* Footer */}
-            <footer className="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-400">
-              <div className="max-w-7xl mx-auto px-4 space-y-1">
-                <p>© WritingMaster - 英文寫作大師 | 助您輕鬆解鎖高分寫作技巧</p>
-              </div>
+            <footer className="bg-white border-t border-slate-200 py-4 mt-auto text-center text-xs text-slate-400">
+              WritingMaster © 2026 - 純前端免 API Key 寫作評分工具，支援部署於 GitHub Pages
             </footer>
           </div>
         );
