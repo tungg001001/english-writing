@@ -256,32 +256,57 @@
         const cleanText = text.trim();
         const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(Boolean);
         const sentenceCount = sentences.length || 1;
-        const words = cleanText.split(/\s+/).filter(Boolean);
-        const wordCount = words.length;
+        const rawWords = cleanText.split(/\s+/).filter(Boolean);
+        const wordCount = rawWords.length;
         const avgSentenceLength = Math.round(wordCount / sentenceCount);
 
+        // Standard English word validation (Check vowels and regular pattern)
+        const validEnglishWordRegex = /^[a-zA-Z]+$/;
+        const vowelRegex = /[aeiouyAEIOUY]/;
+        
+        let validWordCount = 0;
+        const words = rawWords.map(w => {
+          const cleanW = w.toLowerCase().replace(/[^a-z]/g, '');
+          // Basic heuristic: contains letters, has at least one vowel (unless short like 'by', 'my', 'a', 'i'), and reasonable length
+          if (cleanW && validEnglishWordRegex.test(cleanW)) {
+            if (cleanW.length === 1 || vowelRegex.test(cleanW) || cleanW === 'my' || cleanW === 'by' || cleanW === 'fly' || cleanW === 'try' || cleanW === 'dry' || cleanW === 'sky' || cleanW === 'cry') {
+              validWordCount++;
+            }
+          }
+          return cleanW;
+        }).filter(Boolean);
+
+        const wordValidityRatio = wordCount > 0 ? (validWordCount / wordCount) : 0;
+        const isGarbageText = wordValidityRatio < 0.6 || words.length < 5;
+
         // Word variety check (Unique words ratio)
-        const uniqueWords = new Set(words.map(w => w.toLowerCase().replace(/[^a-z]/g, '')));
-        const lexicalDiversity = Math.min(Math.round((uniqueWords.size / (wordCount || 1)) * 100), 100);
+        const uniqueWords = new Set(words);
+        const lexicalDiversity = Math.min(Math.round((uniqueWords.size / (words.length || 1)) * 100), 100);
 
         // Count academic / complex transition markers
         const transitionMatches = (cleanText.match(/\b(however|furthermore|moreover|consequently|therefore|nevertheless|in addition|for instance|to illustrate|on the other hand|in conclusion)\b/gi) || []).length;
         
-        // Calculate Dynamic Scores
-        let score = 60;
-        if (wordCount >= 200) score += 15;
-        else if (wordCount >= 120) score += 10;
-        else if (wordCount >= 60) score += 5;
+        // Calculate Dynamic Scores based on essay features & validity
+        let score = 50;
 
-        if (lexicalDiversity > 60) score += 12;
-        else if (lexicalDiversity > 40) score += 8;
+        if (isGarbageText) {
+          // If user typed random nonsense words like "asdf asdf asdf"
+          score = Math.max(20, Math.floor(wordValidityRatio * 45));
+        } else {
+          if (wordCount >= 200) score += 18;
+          else if (wordCount >= 120) score += 12;
+          else if (wordCount >= 60) score += 7;
 
-        if (transitionMatches >= 3) score += 10;
-        else if (transitionMatches >= 1) score += 5;
+          if (lexicalDiversity >= 40 && lexicalDiversity <= 85) score += 15; // Realistic diversity
+          else if (lexicalDiversity > 85 && wordCount > 20) score += 5; // Extremely high ratio usually means short sentence or abnormal text
 
-        if (avgSentenceLength >= 12 && avgSentenceLength <= 25) score += 8;
+          if (transitionMatches >= 3) score += 12;
+          else if (transitionMatches >= 1) score += 6;
 
-        score = Math.min(Math.max(score, 55), 96);
+          if (avgSentenceLength >= 10 && avgSentenceLength <= 25) score += 8;
+
+          score = Math.min(Math.max(score, 45), 96);
+        }
 
         // Dynamic Rule Matcher & Sentence Replacement List
         const replacementRules = [
@@ -300,42 +325,72 @@
         const corrections = [];
         let modifiedText = cleanText;
 
-        replacementRules.forEach(rule => {
-          const matches = cleanText.match(rule.pattern);
-          if (matches) {
-            const originalMatch = matches[0];
-            if (!corrections.some(c => c.original.toLowerCase() === originalMatch.toLowerCase())) {
-              corrections.push({
-                original: originalMatch,
-                corrected: rule.replacement,
-                reason: rule.note
-              });
-            }
-            modifiedText = modifiedText.replace(rule.pattern, rule.replacement);
-          }
-        });
-
-        if (corrections.length === 0) {
-          sentences.slice(0, 2).forEach(s => {
-            if (s.length > 10) {
-              corrections.push({
-                original: s.trim(),
-                corrected: `Furthermore, ${s.replace(/^I think/i, 'it can be observed that').trim()}`,
-                reason: "優化句子開頭，加入邏輯銜接副詞以增強句構間的推進感。"
-              });
+        if (isGarbageText) {
+          corrections.push({
+            original: cleanText.length > 30 ? cleanText.substring(0, 30) + '...' : cleanText,
+            corrected: "Please insert valid English sentences with standard dictionary vocabulary.",
+            reason: "檢測到輸入內容包含過多無意義字母組合或非標準單字，請輸入有效英文作文。"
+          });
+        } else {
+          replacementRules.forEach(rule => {
+            const matches = cleanText.match(rule.pattern);
+            if (matches) {
+              const originalMatch = matches[0];
+              if (!corrections.some(c => c.original.toLowerCase() === originalMatch.toLowerCase())) {
+                corrections.push({
+                  original: originalMatch,
+                  corrected: rule.replacement,
+                  reason: rule.note
+                });
+              }
+              modifiedText = modifiedText.replace(rule.pattern, rule.replacement);
             }
           });
+
+          if (corrections.length === 0) {
+            sentences.slice(0, 2).forEach(s => {
+              if (s.length > 10) {
+                corrections.push({
+                  original: s.trim(),
+                  corrected: `Furthermore, ${s.replace(/^I think/i, 'it can be observed that').trim()}`,
+                  reason: "優化句子開頭，加入邏輯銜接副詞以增強句構間的推進感。"
+                });
+              }
+            });
+          }
         }
 
-        const grammarAndVocab = `文章總計 ${wordCount} 字，使用了約 ${uniqueWords.size} 個獨立詞彙（詞彙豐富度 ${lexicalDiversity}%）。${
-          lexicalDiversity < 50 ? '建議減少常用詞彙（如 good, bad, many）的重複次數。' : '展現了良好的詞彙運用靈活性。'
-        }`;
+        const grammarAndVocab = isGarbageText
+          ? `檢測到無效英文單字（拼寫合規率僅 ${Math.round(wordValidityRatio * 100)}%）。無法辨識為有效文章。`
+          : `文章總計 ${wordCount} 字，使用了約 ${uniqueWords.size} 個獨立詞彙（詞彙豐富度 ${lexicalDiversity}%）。${
+            lexicalDiversity < 50 ? '建議減少常用詞彙的重複次數。' : '展現了良好的詞彙運用靈活性。'
+          }`;
 
-        const structureAndCoherence = `平均句長約 ${avgSentenceLength} 字/句。文中包含 ${transitionMatches} 個邏輯銜接轉折詞。${
-          transitionMatches < 2 ? '建議適度增加如 Furthermore, However, Consequently 等高級連接詞。' : '段落轉折與邏輯推論鋪陳相當連貫。'
-        }`;
+        const structureAndCoherence = isGarbageText
+          ? `缺乏有效的主謂賓結構或句尾標點，無法進行文法連貫度評估。`
+          : `平均句長約 ${avgSentenceLength} 字/句。文中包含 ${transitionMatches} 個邏輯銜接轉折詞。${
+            transitionMatches < 2 ? '建議適度增加如 Furthermore, However, Consequently 等高級連接詞。' : '段落轉折與邏輯推論鋪陳相當連貫。'
+          }`;
 
-        const contentAndTaskAchievement = `文章回應了議題「${prompt || '寫作題目'}」。針對核心觀點切入清晰，完整呈現了個人論述方向。`;
+        const contentAndTaskAchievement = `文章回應議題「${prompt || '寫作題目'}」。${isGarbageText ? '唯目前輸入不具備完整語義，無法進行切題度與論點評價。' : '針對核心觀點切入清晰，呈現了個人論述方向。'}`;
+
+        // Strictly controlled strengths based on quality
+        const strengths = isGarbageText ? [
+          "已成功將內容提交至系統進行分析",
+          wordCount > 0 ? `輸入長度共 ${wordCount} 個字元片段` : "嘗試進行文字輸入"
+        ] : [
+          `文章篇幅達 ${wordCount} 字，基本結構完整`,
+          lexicalDiversity > 45 ? "詞彙重複率低，展現基礎的表達豐富度" : "主題表達意圖明確，語意清晰"
+        ];
+
+        const weaknesses = isGarbageText ? [
+          "包含大量無意義拼寫或非標準英文單字",
+          "缺乏完整的英文語法句構與標點符號規範",
+          "整體文章可讀性低，建議重新輸入標準語句"
+        ] : [
+          transitionMatches < 2 ? "段落銜接詞偏少，文意轉折可再加強" : "句型結構偏向單一，可適度加入從句或倒裝句",
+          "部分形容詞與動詞搭配有進一步道地化的空間"
+        ];
 
         return {
           overallScore: score,
@@ -344,16 +399,10 @@
             structureAndCoherence,
             contentAndTaskAchievement
           },
-          strengths: [
-            `文章長度達到 ${wordCount} 字，符合標準篇幅要求`,
-            lexicalDiversity > 45 ? "詞彙重複率低，具備基礎的豐富度" : "主題論述立場明確，語意表達清晰"
-          ],
-          weaknesses: [
-            transitionMatches < 2 ? "段落銜接詞偏少，文意轉折可再加強" : "句型結構偏向單一，可適度加入從句或倒裝句",
-            "部分形容詞與動詞搭配有進一步道地化的空間"
-          ],
+          strengths,
+          weaknesses,
           grammarCorrections: corrections,
-          improvedVersion: modifiedText
+          improvedVersion: isGarbageText ? "In recent years, artificial intelligence has made remarkable progress, serving as a powerful technology across various fields." : modifiedText
         };
       };
 
